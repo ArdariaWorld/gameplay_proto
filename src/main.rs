@@ -1,53 +1,75 @@
 use bevy::prelude::*;
-pub struct HelloPlugin;
+pub struct PopulationPlugin;
 struct GreetTimer(Timer);
 
-impl Plugin for HelloPlugin {
+impl Plugin for PopulationPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, true)))
-        .add_startup_system(add_people)
-        .add_system(greet_people)
-        .add_system(print_position_system);
+        .add_startup_system(add_player)
+        .add_startup_system(add_monsters)
+        .add_system(combat_system);
     }
 }
 
 #[derive(Component)]
-struct Position { x: f32 }
-
-
-#[derive(Component)]
-struct Person;
+struct Monster;
 
 #[derive(Component)]
+struct Player;
+
+#[derive(Component, Debug)]
 struct Name(String);
 
-
-fn add_people(mut commands: Commands) {
-    commands.spawn().insert(Person).insert(Name("Elaina Proctor".to_string())).insert(Position{ x: 100f32 });
-    commands.spawn().insert(Person).insert(Name("Renzo Hume".to_string()));
-    commands.spawn().insert(Person).insert(Name("Zayna Nieves".to_string()));
+#[derive(Component)]
+struct Stats {
+    hp: f32,
+    atk: f32,
+    def: f32
 }
 
-fn greet_people(time: Res<Time>, mut timer: ResMut<GreetTimer>, query: Query<&Name, With<Person>>) {
+
+// System
+fn add_player(mut commands: Commands) {
+    commands.spawn()
+    .insert(Player)
+    .insert(Name("SirMashaa".to_string()))
+    .insert(Stats{ hp: 100f32, atk: 10f32, def: 0f32 });
+}
+
+fn add_monsters(mut commands: Commands) {
+    commands.spawn()
+    .insert(Monster)
+    .insert(Name("Monster 1".to_string()))
+    .insert(Stats{ hp: 100f32, atk: 0f32, def: 5f32 });
+}
+
+fn compute_new_stats(player_atk :f32, monster_hp: f32) -> f32 {
+    monster_hp - player_atk
+}
+
+// System
+fn combat_system(
+    time: Res<Time>, 
+    mut timer: ResMut<GreetTimer>, 
+    player_query: Query<&Stats, With<Player>>, 
+    mut monsters_query: Query<&mut Stats, Without<Monster>>
+) {
     if timer.0.tick(time.delta()).just_finished() {
-        for name in query.iter() {
-            println!("hello {}!", name.0);
+
+        let player_stats = player_query.single();
+
+        for mut monster_stats in monsters_query.iter_mut() {
+            monster_stats.hp = compute_new_stats(player_stats.atk, monster_stats.hp);
+            eprintln!("Monster has {} HP.", monster_stats.hp);
         }
     }
 }
 
-fn print_position_system(time: Res<Time>, mut timer: ResMut<GreetTimer>, query: Query<&Position, With<Person>>) {
-    if timer.0.tick(time.delta()).just_finished() {
-        for position in query.iter() {
-            println!("position: {:?}", position.x);
-        }
-    }
-}
-
+// System
 
 fn main() {
     App::new()
         .add_plugins(MinimalPlugins)
-        .add_plugin(HelloPlugin)
+        .add_plugin(PopulationPlugin)
         .run();
 }
