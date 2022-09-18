@@ -1,6 +1,6 @@
 [] spawn one mob
 [] spawn player
-[] attack
+[] attack every 2 seconds
 [] compute damages
 [] update HP stat
 [] die
