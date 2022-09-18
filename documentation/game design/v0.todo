@@ -1,0 +1,6 @@
+[] spawn one mob
+[] spawn player
+[] attack
+[] compute damages
+[] update HP stat
+[] die

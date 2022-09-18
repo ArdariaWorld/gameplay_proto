@@ -1,0 +1,28 @@
+# Core loop
+Explore + Farm + Craft + Fight + Evolve
+
+## Explore
+[] Generate world (grid world)
+[] Spawn monsters
+[] Move
+
+## Fight
+[] Equip items
+[] select monster
+[] attack monster
+[] receive hit
+[] die
+[] kill
+[] get XP
+
+## AI
+[] spawn monster
+[] monster idle <-> roam
+[] monster aggro
+
+## Evolve
+[] open skill tree
+[] improve stats
+
+## Goals
+[] monsters killed
