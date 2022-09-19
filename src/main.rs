@@ -52,7 +52,7 @@ fn combat_system(
     time: Res<Time>, 
     mut timer: ResMut<GreetTimer>, 
     player_query: Query<&Stats, With<Player>>, 
-    mut monsters_query: Query<&mut Stats, Without<Monster>>
+    mut monsters_query: Query<&mut Stats, Without<Player>>
 ) {
     if timer.0.tick(time.delta()).just_finished() {
 
