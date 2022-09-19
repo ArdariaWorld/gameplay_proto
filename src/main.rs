@@ -17,7 +17,7 @@ struct Monster;
 #[derive(Component)]
 struct Player;
 
-#[derive(Component, Debug)]
+#[derive(Component)]
 struct Name(String);
 
 #[derive(Component)]
@@ -43,24 +43,37 @@ fn add_monsters(mut commands: Commands) {
     .insert(Stats{ hp: 100f32, atk: 0f32, def: 5f32 });
 }
 
-fn compute_new_stats(player_atk :f32, monster_hp: f32) -> f32 {
+fn compute_new_hps(player_atk :f32, monster_hp: f32) -> f32 {
     monster_hp - player_atk
 }
 
 // System
 fn combat_system(
+    mut commands: Commands,
     time: Res<Time>, 
     mut timer: ResMut<GreetTimer>, 
     player_query: Query<&Stats, With<Player>>, 
-    mut monsters_query: Query<&mut Stats, Without<Player>>
+    mut monsters_query: Query<(Entity, &Name, &mut Stats), Without<Player>>
 ) {
     if timer.0.tick(time.delta()).just_finished() {
 
         let player_stats = player_query.single();
 
-        for mut monster_stats in monsters_query.iter_mut() {
-            monster_stats.hp = compute_new_stats(player_stats.atk, monster_stats.hp);
-            eprintln!("Monster has {} HP.", monster_stats.hp);
+        if monsters_query.is_empty() {
+            eprintln!("No monster to fight");
+        }
+
+        for (entity_id, name, mut monster_stats) in monsters_query.iter_mut() {
+
+            // Todo move into single function and unit test
+            monster_stats.hp = compute_new_hps(player_stats.atk, monster_stats.hp);
+            if monster_stats.hp <= 0.0 {
+                commands.entity(entity_id).despawn();
+                eprintln!("Monster {} has been killed", name.0);
+            }
+
+
+            eprintln!("Monster {} has {} HP.", name.0, monster_stats.hp);
         }
     }
 }

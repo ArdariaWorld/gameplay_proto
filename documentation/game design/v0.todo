@@ -1,6 +1,7 @@
-[] spawn one mob
-[] spawn player
-[] attack every 2 seconds
-[] compute damages
-[] update HP stat
-[] die
+[x] spawn one mob
+[x] spawn player
+[x] attack every 2 seconds
+[x] compute damages
+[x] update HP stat
+[x] die
+[] unit test for compute damage and die
