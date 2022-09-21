@@ -4,4 +4,4 @@
 [x] compute damages
 [x] update HP stat
 [x] die
-[] unit test for compute damage and die
+[x] unit test for compute damage and die
