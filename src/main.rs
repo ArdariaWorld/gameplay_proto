@@ -20,25 +20,24 @@ fn combat_system(
     mut commands: Commands,
     time: Res<Time>,
     mut timer: ResMut<GreetTimer>,
-    player_query: Query<&Stats, With<Player>>,
-    mut monsters_query: Query<(Entity, &Name, &mut Stats), Without<Player>>,
+    player_query: Query<(&Stats, &Location), With<Player>>,
+    mut monsters_query: Query<(Entity, &Name, (&mut Stats, &Location)), Without<Player>>,
 ) {
     if timer.0.tick(time.delta()).just_finished() {
-        let player_stats = player_query.single();
+        let player = player_query.single();
 
         if monsters_query.is_empty() {
             eprintln!("No monster to fight");
         }
 
-        for (entity_id, name, mut monster_stats) in monsters_query.iter_mut() {
-            // Todo move into single function and unit test
-            attack(
-                &mut commands,
-                entity_id,
-                &mut monster_stats,
-                player_stats,
-                name,
+        for (entity_id, name, mut monster) in monsters_query.iter_mut() {
+            eprintln!(
+                "Player in {:?} will attack monster in {:?}",
+                player.1.position, monster.1.position
             );
+
+            // Todo move into single function and unit test
+            attack(&mut commands, entity_id, &mut monster.0, player.0, name);
         }
     }
 }
@@ -166,10 +165,42 @@ impl Creature {
     }
 }
 
+#[derive(Default, Component)]
+struct Location {
+    destination: Option<Vec2>,
+    max_velocity: Option<f32>,
+    velocity: Option<Vec2>,
+    position: Option<Vec2>,
+}
+
+struct RandVec2 {
+    x: f32,
+    y: f32,
+}
+
+impl RandVec2 {
+    fn new() -> Vec2 {
+        Vec2::new(
+            rand::thread_rng().gen_range(0..WORLD_WIDTH as i32) as f32,
+            rand::thread_rng().gen_range(0..WORLD_HEIGHT as i32) as f32,
+        )
+    }
+}
+
+impl Location {
+    fn new() -> Location {
+        Location {
+            position: Some(RandVec2::new()),
+            ..default()
+        }
+    }
+}
+
 #[derive(Default, Bundle, Component)]
 struct CreatureBundle {
     stats: Stats,
     name: Name,
+    location: Location,
 
     #[bundle]
     sprite_bundle: SpriteBundle,
@@ -180,6 +211,7 @@ impl CreatureBundle {
         CreatureBundle {
             stats: Stats { hp, atk },
             name: Name(name_str),
+            location: Location::new(),
             sprite_bundle: SpriteBundle {
                 transform: Transform {
                     translation: Vec2::new(0.0, 0.0).extend(1.0),
@@ -229,6 +261,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(PopulationPlugin)
         .add_startup_system(init_world_map)
+        .add_system(bevy::window::close_on_esc)
         .run();
 }
 

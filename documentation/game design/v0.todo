@@ -14,7 +14,17 @@
 [x] render monster
 
 # 0.2
+[x] give random position to creatures
+[] place creatures on map
+[] input mouse
+[] move player
+
+
+
+
 [] coordinates system (SERVER)
+
+
 [] game state PLAYING - PAUSE
 [] GAME_OVER when timer ends
 [] spawn monsters at coordinates (SERVER)
