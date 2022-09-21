@@ -10,7 +10,7 @@
 # 0.1
 [x] renderer
 [x] render world
-[] render player
+[x] render player
 [] render monster
 
 # 0.2

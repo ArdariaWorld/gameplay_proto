@@ -11,44 +11,6 @@ impl Plugin for PopulationPlugin {
     }
 }
 
-#[derive(Component)]
-struct Monster;
-
-#[derive(Component)]
-struct Player;
-
-#[derive(Component)]
-struct Name(String);
-
-#[derive(Component)]
-struct Stats {
-    hp: f32,
-    atk: f32,
-}
-
-// System
-fn add_player(mut commands: Commands) -> () {
-    commands
-        .spawn()
-        .insert(Player)
-        .insert(Name("SirMashaa".to_string()))
-        .insert(Stats {
-            hp: 100f32,
-            atk: 10f32,
-        });
-}
-
-fn add_monsters(mut commands: Commands) -> () {
-    commands
-        .spawn()
-        .insert(Monster)
-        .insert(Name("Monster 1".to_string()))
-        .insert(Stats {
-            hp: 100f32,
-            atk: 0f32,
-        });
-}
-
 fn compute_new_hps(player_stats: &Stats, monster_stats: &Stats) -> f32 {
     monster_stats.hp - player_stats.atk
 }
@@ -103,10 +65,16 @@ fn attack(
     eprintln!("Monster {} has {} HP.", monster_name.0, monster_stats.hp);
 }
 
+// -------------------
+// -------------------
+// -------------------
+// WORLD
+
 const WORLD_WIDTH: f32 = 800.0;
 const WORLD_HEIGHT: f32 = 400.0;
 const WALL_COLOR: Color = Color::rgb(0.8, 0.4, 0.2);
 
+// Render the world
 fn init_world_map(mut commands: Commands, mut game: ResMut<Game>) {
     commands.spawn_bundle(Camera2dBundle::default());
 
@@ -153,6 +121,105 @@ struct WorldMapBundle {
 
     #[bundle]
     sprite_bundle: SpriteBundle,
+}
+
+// -------------------
+// -------------------
+// -------------------
+// CREATURE
+
+#[derive(Component, Default)]
+struct Name(String);
+
+#[derive(Component, Default)]
+struct Stats {
+    hp: f32,
+    atk: f32,
+}
+
+#[derive(Default, Bundle)]
+struct PlayerBundle {
+    #[bundle]
+    creature: CreatureBundle,
+    // score
+    // inputs
+}
+
+enum Creature {
+    Human,
+    Monster,
+}
+
+impl Creature {
+    fn color(&self) -> Color {
+        match self {
+            Creature::Human => Color::rgb(0.4, 0.7, 0.1),
+            Creature::Monster => Color::rgb(0.1, 0.7, 0.4),
+        }
+    }
+
+    fn size(&self) -> Vec3 {
+        match self {
+            Creature::Human => Vec2::new(17.0, 40.0).extend(1.0),
+            Creature::Monster => Vec2::new(25.0, 35.0).extend(1.0),
+        }
+    }
+}
+
+#[derive(Default, Bundle)]
+struct CreatureBundle {
+    stats: Stats,
+    name: Name,
+
+    #[bundle]
+    sprite_bundle: SpriteBundle,
+}
+
+impl CreatureBundle {
+    fn new(creature: Creature, name_str: String, hp: f32, atk: f32) -> CreatureBundle {
+        CreatureBundle {
+            stats: Stats { hp, atk },
+            name: Name(name_str),
+            sprite_bundle: SpriteBundle {
+                transform: Transform {
+                    translation: Vec2::new(0.0, 0.0).extend(1.0),
+                    scale: creature.size(),
+                    ..default()
+                },
+                sprite: Sprite {
+                    color: creature.color(),
+                    ..default()
+                },
+                ..default()
+            },
+        }
+    }
+}
+
+#[derive(Component)]
+struct Monster;
+
+#[derive(Component)]
+struct Player;
+
+// System
+fn add_player(mut commands: Commands) -> () {
+    commands
+        .spawn_bundle(PlayerBundle {
+            creature: CreatureBundle::new(Creature::Human, "Jbb".to_string(), 100.0, 20.0),
+        })
+        .insert(Player);
+}
+
+fn add_monsters(mut commands: Commands) -> () {
+    commands
+        .spawn()
+        .insert(Monster)
+        .insert(Name("Monster 1".to_string()))
+        .insert(Stats {
+            hp: 100f32,
+            atk: 0f32,
+        });
 }
 
 fn main() {
