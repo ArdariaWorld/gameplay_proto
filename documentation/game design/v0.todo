@@ -1,3 +1,4 @@
+# 0.0
 [x] spawn one mob
 [x] spawn player
 [x] attack every 2 seconds
@@ -5,3 +6,39 @@
 [x] update HP stat
 [x] die
 [x] unit test for compute damage and die
+
+# 0.1
+[x] renderer
+[x] render world
+[] render player
+[] render monster
+
+# 0.2
+[] coordinates system (SERVER)
+[] game state PLAYING - PAUSE
+[] GAME_OVER when timer ends
+[] spawn monsters at coordinates (SERVER)
+[] movement system for player (SERVER)
+[] input for choose new coordinates -> CLIENT
+[] move feedback -> CLIENT
+[] attack monster (SERVER) -> input for attack (CLIENT)
+
+# 0.X
+[] IA
+[] monster roam
+[] monster aggro
+[] player defend
+[] fight atk -> def -> atk
+[] player input
+[] visual feedback
+[] select monster
+[] position player
+[] position monster
+
+# What is a game?
+- goal -> kill more monsters
+- analysis -> where is the easiest monster to kill?
+- choice -> choose a path to the monster and avoid stronger monsters
+- action -> attack the choosen monster
+- feedback -> monster killed
+- achievement or death -> increase score of killed monsters

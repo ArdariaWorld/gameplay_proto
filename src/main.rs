@@ -103,10 +103,65 @@ fn attack(
     eprintln!("Monster {} has {} HP.", monster_name.0, monster_stats.hp);
 }
 
+const WORLD_WIDTH: f32 = 800.0;
+const WORLD_HEIGHT: f32 = 400.0;
+const WALL_COLOR: Color = Color::rgb(0.8, 0.4, 0.2);
+
+fn init_world_map(mut commands: Commands, mut game: ResMut<Game>) {
+    commands.spawn_bundle(Camera2dBundle::default());
+
+    commands.spawn_bundle(WorldMapBundle {
+        world_map: WorldMap {
+            h: WORLD_WIDTH,
+            w: WORLD_HEIGHT,
+        },
+        sprite_bundle: SpriteBundle {
+            transform: Transform {
+                // We need to convert our Vec2 into a Vec3, by giving it a z-coordinate
+                // This is used to determine the order of our sprites
+                translation: Vec2::new(0.0, 0.0).extend(0.0),
+                // The z-scale of 2D objects must always be 1.0,
+                // or their ordering will be affected in surprising ways.
+                // See https://github.com/bevyengine/bevy/issues/4149
+                scale: Vec2::new(WORLD_WIDTH, WORLD_HEIGHT).extend(1.0),
+                ..default()
+            },
+            sprite: Sprite {
+                color: WALL_COLOR,
+                ..default()
+            },
+            ..default()
+        },
+    });
+}
+
+#[derive(Default)]
+struct Game {
+    // here add game state
+    world_bundle: WorldMapBundle,
+}
+
+#[derive(Default, Component)]
+struct WorldMap {
+    w: f32,
+    h: f32,
+}
+
+#[derive(Default, Bundle)]
+struct WorldMapBundle {
+    world_map: WorldMap,
+
+    #[bundle]
+    sprite_bundle: SpriteBundle,
+}
+
 fn main() {
+    // main_bis();
     App::new()
-        .add_plugins(MinimalPlugins)
+        .init_resource::<Game>()
+        .add_plugins(DefaultPlugins)
         .add_plugin(PopulationPlugin)
+        .add_startup_system(init_world_map)
         .run();
 }
 
