@@ -166,7 +166,7 @@ impl Creature {
     }
 }
 
-#[derive(Default, Bundle)]
+#[derive(Default, Bundle, Component)]
 struct CreatureBundle {
     stats: Stats,
     name: Name,
@@ -213,13 +213,13 @@ fn add_player(mut commands: Commands) -> () {
 
 fn add_monsters(mut commands: Commands) -> () {
     commands
-        .spawn()
-        .insert(Monster)
-        .insert(Name("Monster 1".to_string()))
-        .insert(Stats {
-            hp: 100f32,
-            atk: 0f32,
-        });
+        .spawn_bundle(CreatureBundle::new(
+            Creature::Monster,
+            "Monster 1".to_string(),
+            90.0,
+            10.0,
+        ))
+        .insert(Monster);
 }
 
 fn main() {

@@ -11,7 +11,7 @@
 [x] renderer
 [x] render world
 [x] render player
-[] render monster
+[x] render monster
 
 # 0.2
 [] coordinates system (SERVER)
