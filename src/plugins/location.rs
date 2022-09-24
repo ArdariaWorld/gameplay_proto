@@ -1,4 +1,4 @@
-use bevy::{math::Vec3A, prelude::*};
+use bevy::prelude::*;
 
 use crate::{utils::vec::RandVec2, STEP_DISTANCE};
 

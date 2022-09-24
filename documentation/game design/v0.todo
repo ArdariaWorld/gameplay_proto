@@ -25,12 +25,16 @@
 # 0.3
 [x] add kills counter
 [x] display creatures HP
-[] update kills counter
-[] increase kills counter
+[x] refactorize creatures/monster/player spawn
 
 # 0.4
-[] attack a monster (Click on monster)
+[] attack a monster
 [] kill a monster
+
+# 0.5
+[] update hps
+[] increase kills counter
+
 
 
 

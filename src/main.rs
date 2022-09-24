@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 pub mod plugins;
 pub mod utils;
 
@@ -12,9 +11,6 @@ use plugins::{
     population::PopulationPlugin,
     world::{init_world_map, WorldMapBundle},
 };
-
-struct GreetTimer(Timer);
-struct LocationTimer(Timer);
 
 pub const STEP_DISTANCE: f32 = 150.;
 pub const WORLD_WIDTH: f32 = 800.0;

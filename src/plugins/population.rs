@@ -4,8 +4,7 @@ use bevy::prelude::*;
 pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(add_player)
-            .add_startup_system(add_monsters);
+        app.add_startup_system(spawn_creatures);
     }
 }
 
@@ -32,8 +31,7 @@ pub struct CreatureBundle {
 }
 
 impl CreatureBundle {
-    fn new(creature: CreatureType, name_str: String, hp: f32, atk: f32) -> CreatureBundle {
-        //
+    fn new(name_str: String, hp: f32, atk: f32) -> CreatureBundle {
         CreatureBundle {
             stats: Stats { hp, atk },
             name: Name(name_str),
@@ -48,6 +46,7 @@ pub struct Monster;
 #[derive(Component)]
 pub struct Player;
 
+#[derive(Clone)]
 enum CreatureType {
     Human,
     Monster,
@@ -72,7 +71,24 @@ impl CreatureType {
     }
 }
 
-fn add_player(mut commands: Commands, asset_server: Res<AssetServer>) -> () {
+fn spawn_creatures(mut commands: Commands, mut asset_server: Res<AssetServer>) -> () {
+    add_creature(&mut commands, &mut asset_server, true);
+
+    for _ in 0..10 {
+        add_creature(&mut commands, &mut asset_server, false);
+    }
+}
+
+fn add_creature(
+    commands: &mut Commands,
+    asset_server: &mut Res<AssetServer>,
+    is_player: bool,
+) -> () {
+    let creature_type = match is_player {
+        true => CreatureType::Human,
+        false => CreatureType::Monster,
+    };
+
     commands
         .spawn_bundle(SpatialBundle {
             transform: Transform::from_scale(Vec3::splat(1.)),
@@ -81,27 +97,25 @@ fn add_player(mut commands: Commands, asset_server: Res<AssetServer>) -> () {
         //
         // Add Creature
         .with_children(|parent| {
-            parent
-                .spawn_bundle(CreatureBundle::new(
-                    CreatureType::Human,
-                    "Jbb".to_string(),
-                    100.0,
-                    20.0,
-                ))
-                .insert(Creature)
-                .insert(Player);
+            let mut ent = parent.spawn_bundle(CreatureBundle::new("Jbb".to_string(), 100.0, 20.0));
+
+            ent.insert(Creature);
+
+            if is_player {
+                ent.insert(Player);
+            }
         })
         //
         // Add Sprite
         .with_children(|parent| {
             parent.spawn_bundle(SpriteBundle {
                 transform: Transform {
-                    scale: CreatureType::Human.size(),
+                    scale: creature_type.size(),
                     translation: Vec2::splat(0.).extend(-1.),
                     ..default()
                 },
                 sprite: Sprite {
-                    color: CreatureType::Human.color(),
+                    color: creature_type.color(),
                     ..default()
                 },
                 ..default()
@@ -127,22 +141,3 @@ fn add_player(mut commands: Commands, asset_server: Res<AssetServer>) -> () {
             });
         });
 }
-
-fn add_monsters(mut commands: Commands, asset_server: Res<AssetServer>) -> () {
-    commands
-        .spawn_bundle(CreatureBundle::new(
-            CreatureType::Monster,
-            "Monster 1".to_string(),
-            90.0,
-            10.0,
-        ))
-        .insert(Creature)
-        .insert(Monster);
-}
-
-// fn update_hps_display(
-//     mut creatures_query: Query<(&mut Location, &mut Transform), With<Creature>>,
-
-// ){
-
-// }
