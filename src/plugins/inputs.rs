@@ -25,7 +25,6 @@ pub fn handle_mouse_click(
             if let (Ok(mut location), Some(cursor_position)) =
                 (player_query.get_single_mut(), win.cursor_position())
             {
-                println!("Cursor {:?}", cursor_position);
                 location.destination = Some(
                     cursor_position
                         - Vec2::new(win.requested_width() / 2., win.requested_height() / 2.)
