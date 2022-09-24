@@ -16,7 +16,7 @@ struct LocationTimer(Timer);
 pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(GreetTimer(Timer::from_seconds(0.2, true)))
+        app.insert_resource(GreetTimer(Timer::from_seconds(1., true)))
             .add_startup_system(add_player)
             .add_startup_system(add_monsters);
     }
@@ -25,12 +25,15 @@ impl Plugin for PopulationPlugin {
 pub struct LocationPlugin;
 impl Plugin for LocationPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(location_system);
+        app.insert_resource(GreetTimer(Timer::from_seconds(1., true)))
+            .add_system(location_system)
+            .add_system(camera_follow_player);
     }
 }
 
 fn location_system(
     time: Res<Time>,
+    mut timer: ResMut<GreetTimer>,
     mut creatures_query: Query<(&mut Location, &mut Transform), With<Creature>>,
 ) {
     for (mut location, mut transform) in creatures_query.iter_mut() {
@@ -38,17 +41,31 @@ fn location_system(
         if let (Some(destination), Some(position)) = (location.destination, location.position) {
             // compute vector from position to destination
             let delta_v = destination - position;
-            println!("{:?}", delta_v);
-            location.position = Some(position + delta_v.normalize() * 100.0 * time.delta_seconds());
-            // reduce vector to maximum velocity
+            let new_positon = position + delta_v.normalize() * 100.0 * time.delta_seconds();
+
             // apply new vector to position to get new_posittion
+            location.position = Some(new_positon);
         }
-        // transform.translation.x += 10.0 * time.delta_seconds();
 
         // Update sprite transform from entity position
         if let Some(position) = location.position {
             transform.translation = position.extend(1.0);
+            if timer.0.tick(time.delta()).just_finished() {
+                println!("Position {:?}", position.extend(1.0));
+            }
         }
+    }
+}
+
+fn camera_follow_player(
+    player_query: Query<&Location, With<Player>>,
+    mut camera_query: Query<&mut Transform, With<Camera>>,
+) {
+    let player_location = player_query.get_single().unwrap();
+    let mut camera_transform = camera_query.get_single_mut().unwrap();
+
+    if let Some(position) = player_location.position {
+        camera_transform.translation = position.extend(1.);
     }
 }
 
@@ -57,14 +74,15 @@ fn handle_mouse_click(
     windows: Res<Windows>,
     mut player_query: Query<&mut Location, With<Player>>,
 ) {
-    // eprintln!("Mouse event system {}", player_query.is_empty());
     for event in mouse_button_input_events.iter() {
         if event.state == ButtonState::Pressed {
             let win = windows.get_primary().expect("no primary window");
-            // println!("{:?}", win.cursor_position());
+
+            // Change destination one player clicks somewhere on the map
             if let (Ok(mut location), Some(cursor_position)) =
                 (player_query.get_single_mut(), win.cursor_position())
             {
+                println!("Cursor {:?}", cursor_position);
                 location.destination = Some(cursor_position);
             }
         }
