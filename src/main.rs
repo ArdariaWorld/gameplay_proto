@@ -20,7 +20,6 @@ pub const STEP_DISTANCE: f32 = 150.;
 pub const WORLD_WIDTH: f32 = 800.0;
 pub const WORLD_HEIGHT: f32 = 400.0;
 pub const WALL_COLOR: Color = Color::rgb(0.8, 0.4, 0.2);
-
 #[derive(Default)]
 pub struct Game {
     // here add game state

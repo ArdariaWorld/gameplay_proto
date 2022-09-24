@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{math::Vec3A, prelude::*};
 
 use crate::{utils::vec::RandVec2, STEP_DISTANCE};
 
@@ -30,9 +30,10 @@ impl Plugin for LocationPlugin {
 
 fn location_system(
     time: Res<Time>,
-    mut creatures_query: Query<(&mut Location, &mut Transform), With<Creature>>,
+    mut creatures_query: Query<(&Parent, &mut Location), With<Creature>>,
+    mut q_parent: Query<&mut Transform>,
 ) {
-    for (mut location, mut transform) in creatures_query.iter_mut() {
+    for (parent_entity, mut location) in creatures_query.iter_mut() {
         // Update location if entity have a destination
         if let (Some(destination), Some(position)) = (location.destination, location.position) {
             // compute vector from position to destination
@@ -45,9 +46,11 @@ fn location_system(
             }
         }
 
-        // Update sprite transform from entity position
-        if let Some(position) = location.position {
-            transform.translation = position.extend(1.0);
+        // Update parent transform from creature computed position
+        if let (Ok(mut parent_transform), Some(position)) =
+            (q_parent.get_mut(parent_entity.get()), location.position)
+        {
+            parent_transform.translation = position.extend(1.);
         }
     }
 }

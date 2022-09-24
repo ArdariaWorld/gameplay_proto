@@ -22,8 +22,6 @@ pub struct Stats {
 pub struct PlayerBundle {
     #[bundle]
     creature: CreatureBundle,
-    // score
-    // inputs
 }
 
 #[derive(Default, Bundle)]
@@ -31,29 +29,15 @@ pub struct CreatureBundle {
     pub stats: Stats,
     pub name: Name,
     pub location: Location,
-
-    #[bundle]
-    sprite_bundle: SpriteBundle,
 }
 
 impl CreatureBundle {
     fn new(creature: CreatureType, name_str: String, hp: f32, atk: f32) -> CreatureBundle {
+        //
         CreatureBundle {
             stats: Stats { hp, atk },
             name: Name(name_str),
             location: Location::new(),
-            sprite_bundle: SpriteBundle {
-                transform: Transform {
-                    translation: Vec2::new(0.0, 0.0).extend(1.0),
-                    scale: creature.size(),
-                    ..default()
-                },
-                sprite: Sprite {
-                    color: creature.color(),
-                    ..default()
-                },
-                ..default()
-            },
         }
     }
 }
@@ -88,16 +72,74 @@ impl CreatureType {
     }
 }
 
-fn add_player(mut commands: Commands) -> () {
+fn add_player(mut commands: Commands, asset_server: Res<AssetServer>) -> () {
     commands
-        .spawn_bundle(PlayerBundle {
-            creature: CreatureBundle::new(CreatureType::Human, "Jbb".to_string(), 100.0, 20.0),
+        .spawn_bundle(SpatialBundle {
+            transform: Transform::from_scale(Vec3::splat(1.)),
+            visibility: Visibility { is_visible: true },
+            ..Default::default()
         })
-        .insert(Creature)
-        .insert(Player);
+        .with_children(|parent| {
+            parent
+                .spawn_bundle(CreatureBundle::new(
+                    CreatureType::Human,
+                    "Jbb".to_string(),
+                    100.0,
+                    20.0,
+                ))
+                .insert(Creature)
+                .insert(Player);
+        })
+        .with_children(|parent| {
+            parent
+                .spawn_bundle(SpriteBundle {
+                    visibility: Visibility { is_visible: true },
+                    transform: Transform {
+                        scale: CreatureType::Human.size(),
+                        ..default()
+                    },
+                    sprite: Sprite {
+                        color: CreatureType::Human.color(),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|parent2| {
+                    parent2.spawn_bundle(
+                        TextBundle::from_section(
+                            100.0.to_string(),
+                            TextStyle {
+                                font_size: 20.0,
+                                color: Color::rgb(0.5, 0.5, 1.0),
+                                font: asset_server.load("fonts/FiraCode-Bold.ttf"),
+                            },
+                        ), // .with_style(Style {
+                           //     position_type: PositionType::Absolute,
+                           //     position: UiRect {
+                           //         top: Val::Px(5.0),
+                           //         left: Val::Px(5.0),
+                           //         ..default()
+                           //     },
+                           //     ..default()
+                           // }),
+                    );
+                });
+        });
+    // .with_children(|parent| {
+    //     parent.spawn_bundle(NodeBundle {
+    //         style: Style {
+    //             margin: UiRect::all(Val::Auto),
+    //             justify_content: JustifyContent::Center,
+    //             align_items: AlignItems::Center,
+    //             ..default()
+    //         },
+    //         color: Color::NONE.into(),
+    //         ..default()
+    //     })
+    // });
 }
 
-fn add_monsters(mut commands: Commands) -> () {
+fn add_monsters(mut commands: Commands, asset_server: Res<AssetServer>) -> () {
     commands
         .spawn_bundle(CreatureBundle::new(
             CreatureType::Monster,
@@ -108,3 +150,10 @@ fn add_monsters(mut commands: Commands) -> () {
         .insert(Creature)
         .insert(Monster);
 }
+
+// fn update_hps_display(
+//     mut creatures_query: Query<(&mut Location, &mut Transform), With<Creature>>,
+
+// ){
+
+// }

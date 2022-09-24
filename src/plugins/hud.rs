@@ -21,7 +21,6 @@ impl Plugin for HudPlugin {
 struct Score;
 
 fn init_score_system(mut commands: Commands, asset_server: Res<AssetServer>) {
-    println!("Bonjour");
     commands
         .spawn_bundle(
             TextBundle::from_section(
