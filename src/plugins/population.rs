@@ -120,7 +120,7 @@ fn add_player(mut commands: Commands, asset_server: Res<AssetServer>) -> () {
                     },
                 ),
                 transform: Transform {
-                    translation: Vec3::new(-25., 60., 0.),
+                    translation: Vec3::new(-25., 60., -1.),
                     ..default()
                 },
                 ..default()

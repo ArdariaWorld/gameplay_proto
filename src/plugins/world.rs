@@ -28,7 +28,7 @@ pub fn init_world_map(mut commands: Commands) {
             transform: Transform {
                 // We need to convert our Vec2 into a Vec3, by giving it a z-coordinate
                 // This is used to determine the order of our sprites
-                translation: Vec2::new(0.0, 0.0).extend(0.0),
+                translation: Vec2::new(0.0, 0.0).extend(-3.0),
                 // The z-scale of 2D objects must always be 1.0,
                 // or their ordering will be affected in surprising ways.
                 // See https://github.com/bevyengine/bevy/issues/4149

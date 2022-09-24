@@ -50,7 +50,7 @@ fn location_system(
         if let (Ok(mut parent_transform), Some(position)) =
             (q_parent.get_mut(parent_entity.get()), location.position)
         {
-            parent_transform.translation = position.extend(1.);
+            parent_transform.translation = position.extend(2.);
         }
     }
 }
