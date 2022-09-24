@@ -5,6 +5,8 @@ pub mod utils;
 use bevy::prelude::*;
 use plugins::{
     camera::camera_follow_player,
+    combat::CombatPlugin,
+    hud::HudPlugin,
     inputs::handle_mouse_click,
     location::LocationPlugin,
     population::PopulationPlugin,
@@ -29,9 +31,11 @@ fn main() {
     App::new()
         .init_resource::<Game>()
         .add_plugins(DefaultPlugins)
+        .add_plugin(CombatPlugin)
         .add_plugin(PopulationPlugin)
         .add_system(handle_mouse_click)
         .add_plugin(LocationPlugin)
+        .add_plugin(HudPlugin)
         .add_system(camera_follow_player)
         .add_startup_system(init_world_map)
         .add_system(bevy::window::close_on_esc)

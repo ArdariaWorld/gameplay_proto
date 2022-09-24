@@ -14,8 +14,8 @@ pub struct Name(String);
 
 #[derive(Component, Default)]
 pub struct Stats {
-    hp: f32,
-    atk: f32,
+    pub hp: f32,
+    pub atk: f32,
 }
 
 #[derive(Default, Bundle)]
@@ -28,9 +28,9 @@ pub struct PlayerBundle {
 
 #[derive(Default, Bundle)]
 pub struct CreatureBundle {
-    stats: Stats,
-    name: Name,
-    location: Location,
+    pub stats: Stats,
+    pub name: Name,
+    pub location: Location,
 
     #[bundle]
     sprite_bundle: SpriteBundle,
@@ -76,13 +76,13 @@ impl CreatureType {
     fn color(&self) -> Color {
         match self {
             CreatureType::Human => Color::rgb(0.4, 0.7, 0.1),
-            CreatureType::Monster => Color::rgb(0.1, 0.7, 0.4),
+            CreatureType::Monster => Color::rgb(0.7, 0.1, 0.1),
         }
     }
 
     fn size(&self) -> Vec3 {
         match self {
-            CreatureType::Human => Vec2::new(17.0, 40.0).extend(1.0),
+            CreatureType::Human => Vec2::new(17.0, 40.0).extend(2.0),
             CreatureType::Monster => Vec2::new(25.0, 35.0).extend(1.0),
         }
     }
