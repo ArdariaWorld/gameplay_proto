@@ -20,9 +20,10 @@
 [x] input mouse
 [x] move player
 [x] move player to exact location
-[] split code in modules
+[x] split code in modules
 
 # 0.3
+
 
 
 [] coordinates system (SERVER)
