@@ -19,10 +19,10 @@
 [x] integration test
 [x] input mouse
 [x] move player
-[] move player to exact location
+[x] move player to exact location
 [] split code in modules
 
-
+# 0.3
 
 
 [] coordinates system (SERVER)

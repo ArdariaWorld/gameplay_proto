@@ -31,6 +31,8 @@ impl Plugin for LocationPlugin {
     }
 }
 
+const STEP_DISTANCE: f32 = 150.;
+
 fn location_system(
     time: Res<Time>,
     mut timer: ResMut<GreetTimer>,
@@ -41,10 +43,12 @@ fn location_system(
         if let (Some(destination), Some(position)) = (location.destination, location.position) {
             // compute vector from position to destination
             let delta_v = destination - position;
-            let new_positon = position + delta_v.normalize() * 100.0 * time.delta_seconds();
+            let new_positon = position + delta_v.normalize() * STEP_DISTANCE * time.delta_seconds();
 
             // apply new vector to position to get new_posittion
-            location.position = Some(new_positon);
+            if !destination.abs_diff_eq(new_positon, STEP_DISTANCE * time.delta_seconds()) {
+                location.position = Some(new_positon);
+            }
         }
 
         // Update sprite transform from entity position
@@ -61,8 +65,8 @@ fn camera_follow_player(
     player_query: Query<&Location, With<Player>>,
     mut camera_query: Query<&mut Transform, With<Camera>>,
 ) {
-    let player_location = player_query.get_single().unwrap();
-    let mut camera_transform = camera_query.get_single_mut().unwrap();
+    let player_location = player_query.get_single().expect("No player location");
+    let mut camera_transform = camera_query.get_single_mut().expect("No camera transform");
 
     if let Some(position) = player_location.position {
         camera_transform.translation = position.extend(1.);
@@ -73,7 +77,14 @@ fn handle_mouse_click(
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
     windows: Res<Windows>,
     mut player_query: Query<&mut Location, With<Player>>,
+    camera_query: Query<&Transform, With<Camera>>,
 ) {
+    let camera_transform = camera_query
+        .get_single()
+        .expect("No camera transform")
+        .translation
+        .truncate();
+
     for event in mouse_button_input_events.iter() {
         if event.state == ButtonState::Pressed {
             let win = windows.get_primary().expect("no primary window");
@@ -83,7 +94,11 @@ fn handle_mouse_click(
                 (player_query.get_single_mut(), win.cursor_position())
             {
                 println!("Cursor {:?}", cursor_position);
-                location.destination = Some(cursor_position);
+                location.destination = Some(
+                    cursor_position
+                        - Vec2::new(win.requested_width() / 2., win.requested_height() / 2.)
+                        + camera_transform,
+                );
             }
         }
     }
