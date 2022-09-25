@@ -2,7 +2,7 @@ use super::{location::*, population::*};
 use bevy::prelude::*;
 
 pub struct HitMonsterEvent(pub Entity);
-pub struct KillMonsterEvent(Entity);
+pub struct KillMonsterEvent(pub Entity);
 
 #[derive(Default)]
 pub struct MonstersKilled {
@@ -24,6 +24,7 @@ fn monster_hit_system(
     mut entity_query: Query<(Entity, &Children)>,
     mut monsters_query: Query<&mut Stats>,
     mut ev_hit_monster: EventReader<HitMonsterEvent>,
+    mut ev_kill_monster: EventWriter<KillMonsterEvent>,
 ) {
     for ev in ev_hit_monster.iter() {
         let (entity, children) = match entity_query.get_mut(ev.0) {
@@ -40,6 +41,7 @@ fn monster_hit_system(
                     stats.hp -= 10.;
 
                     if stats.hp <= 0. {
+                        ev_kill_monster.send(KillMonsterEvent(entity));
                         commands.entity(entity).despawn_recursive();
                     }
                 }
