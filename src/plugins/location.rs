@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{utils::vec::RandVec2, STEP_DISTANCE};
+use crate::utils::vec::RandVec2;
 
 use super::population::Creature;
 
@@ -30,18 +30,19 @@ impl Plugin for LocationPlugin {
 
 fn location_system(
     time: Res<Time>,
-    mut creatures_query: Query<(&Parent, &mut Location), With<Creature>>,
+    mut creatures_query: Query<(&Parent, &mut Location, &Creature), With<Creature>>,
     mut q_parent: Query<&mut Transform>,
 ) {
-    for (parent_entity, mut location) in creatures_query.iter_mut() {
+    for (parent_entity, mut location, creature) in creatures_query.iter_mut() {
         // Update location if entity have a destination
         if let (Some(destination), Some(position)) = (location.destination, location.position) {
             // compute vector from position to destination
             let delta_v = destination - position;
-            let new_positon = position + delta_v.normalize() * STEP_DISTANCE * time.delta_seconds();
+            let new_positon =
+                position + delta_v.normalize() * creature.0.speed() * time.delta_seconds();
 
             // apply new vector to position to get new_posittion
-            if !destination.abs_diff_eq(new_positon, STEP_DISTANCE * time.delta_seconds()) {
+            if !destination.abs_diff_eq(new_positon, creature.0.speed() * time.delta_seconds()) {
                 location.position = Some(new_positon);
             }
         }

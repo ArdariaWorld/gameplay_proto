@@ -35,13 +35,28 @@
 [x] update hps
 [x] increase kills counter
 
+# 0.6
+[x] monster aggro
+[x] reduce monster speed
+[] monster attack player
 
+# 0.7
+[] collect resources
+[] heal player
+
+# 0.8
+[] respawn monsters
+
+# 0.9
+[] refactorize code -> use ControlFlow with <?> operator
+[] split plugin in several files
+
+# 1.0
+[] release on web `prototype.ardaria.com`
 
 
 
 [] coordinates system (SERVER)
-
-
 [] game state PLAYING - PAUSE
 [] GAME_OVER when timer ends
 [] spawn monsters at coordinates (SERVER)
@@ -62,10 +77,3 @@
 [] position player
 [] position monster
 
-# What is a game?
-- goal -> kill more monsters
-- analysis -> where is the monster to kill?
-- choice -> choose a path to the monster
-- action -> attack the choosen monster
-- feedback -> monster killed
-- achievement or death -> increase score of killed monsters

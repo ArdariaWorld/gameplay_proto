@@ -1,3 +1,5 @@
+use crate::{HUMAN_STEP_DISTANCE, MONSTER_STEP_DISTANCE};
+
 use super::{combat::HitMonsterEvent, location::Location};
 use bevy::prelude::*;
 
@@ -74,6 +76,13 @@ impl CreatureType {
         match self {
             CreatureType::Human => Vec2::new(17.0, 40.0).extend(2.0),
             CreatureType::Monster => Vec2::new(25.0, 35.0).extend(1.0),
+        }
+    }
+
+    pub fn speed(&self) -> f32 {
+        match self {
+            CreatureType::Human => HUMAN_STEP_DISTANCE,
+            CreatureType::Monster => MONSTER_STEP_DISTANCE,
         }
     }
 }
