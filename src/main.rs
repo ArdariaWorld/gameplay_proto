@@ -14,11 +14,19 @@ use plugins::{
 
 pub const HUMAN_STEP_DISTANCE: f32 = 150.;
 pub const MONSTER_STEP_DISTANCE: f32 = 100.;
+
+pub const HUMAN_MAX_RANGE: f32 = 200.;
+pub const MONSTER_MAX_RANGE: f32 = 170.;
+
+pub const HUMAN_ATK: f32 = 20.;
+pub const MONSTER_ATK: f32 = 7.;
+
+pub const MONSTER_ATTACK_COOLDOWN: f32 = 2.;
+pub const MONSTER_AGGRO_DISTANCE: f32 = 200.;
+
 pub const WORLD_WIDTH: f32 = 800.0;
 pub const WORLD_HEIGHT: f32 = 400.0;
 pub const WALL_COLOR: Color = Color::rgb(0.8, 0.4, 0.2);
-pub const MAX_ATTACK_DISTANCE: f32 = 200.;
-pub const MONSTER_AGGRO_DISTANCE: f32 = 200.;
 
 #[derive(Default)]
 pub struct Game {

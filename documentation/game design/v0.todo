@@ -38,9 +38,12 @@
 # 0.6
 [x] monster aggro
 [x] reduce monster speed
-[] monster attack player
+[x] monster attack cooldown @started(22-09-25 20:57) @done(22-09-25 21:21) @lasted(24m32s)
+[x] monster attack player @started(22-09-25 20:39) @done(22-09-25 21:21) @lasted(42m39s)
 
 # 0.7
+[] player death
+[] player auto respawn
 [] collect resources
 [] heal player
 

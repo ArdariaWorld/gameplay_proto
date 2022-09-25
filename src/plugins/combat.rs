@@ -1,7 +1,9 @@
-use crate::MONSTER_AGGRO_DISTANCE;
+use crate::{MONSTER_AGGRO_DISTANCE, MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE};
 
 use super::{location::*, population::*};
 use bevy::prelude::*;
+
+pub struct KillPlayerEvent();
 
 pub struct HitMonsterEvent(pub Entity);
 pub struct KillMonsterEvent(pub Entity);
@@ -17,18 +19,27 @@ impl Plugin for CombatPlugin {
         app.insert_resource(MonstersKilled { count: 0 })
             .add_event::<HitMonsterEvent>()
             .add_event::<KillMonsterEvent>()
+            .add_event::<KillPlayerEvent>()
             .add_system(monster_hit_system)
-            .add_system(monster_aggro_system);
+            .add_system(monster_aggro_system)
+            .add_system(monster_fight_system);
     }
 }
 
 fn monster_hit_system(
     mut commands: Commands,
     mut entity_query: Query<(Entity, &Children)>,
-    mut monsters_query: Query<&mut Stats>,
+    mut monsters_query: Query<&mut Stats, Without<Player>>,
+    player_query: Query<&Stats, With<Player>>,
     mut ev_hit_monster: EventReader<HitMonsterEvent>,
     mut ev_kill_monster: EventWriter<KillMonsterEvent>,
 ) {
+    // Get player stats
+    let player_stats = match player_query.get_single() {
+        Ok(stats) => stats,
+        Err(_) => return,
+    };
+
     for ev in ev_hit_monster.iter() {
         let (entity, children) = match entity_query.get_mut(ev.0) {
             Ok(result) => result,
@@ -41,7 +52,7 @@ fn monster_hit_system(
         for &child in children.iter() {
             match monsters_query.get_mut(child) {
                 Ok(mut stats) => {
-                    stats.hp -= 10.;
+                    stats.hp -= player_stats.atk;
 
                     if stats.hp <= 0. {
                         ev_kill_monster.send(KillMonsterEvent(entity));
@@ -68,7 +79,7 @@ fn monster_aggro_system(
     };
 
     // for each monster -> get distance from player
-    for (mut location) in monsters_query.iter_mut() {
+    for mut location in monsters_query.iter_mut() {
         let position = match location.position {
             Some(position) => position,
             None => continue,
@@ -82,53 +93,45 @@ fn monster_aggro_system(
     }
 }
 
+fn monster_fight_system(
+    time: Res<Time>,
+    mut monsters_query: Query<
+        (&Location, &Stats, &mut LastAttack),
+        (With<Monster>, Without<Player>),
+    >,
+    mut player_query: Query<(&Location, &mut Stats), With<Player>>,
+) {
+    // Get player position
+    let (player_position, mut player_stats) = match player_query.get_single_mut() {
+        Ok(tuple) => match tuple.0.position {
+            Some(position) => (position, tuple.1),
+            None => return,
+        },
+        Err(_) => return,
+    };
+
+    // for each monster -> get distance from player
+    for (location, stats, mut last_attack) in monsters_query.iter_mut() {
+        let position = match location.position {
+            Some(position) => position,
+            None => continue,
+        };
+
+        // if distance <= MONSTER_MAX_RANGE
+        if position.abs_diff_eq(player_position, MONSTER_MAX_RANGE)
+            && last_attack.0.tick(time.delta()).finished()
+        {
+            // Reset monster timer
+            last_attack.0.reset();
+
+            // monster to attack player
+            player_stats.hp -= stats.atk;
+        }
+    }
+}
+
 fn compute_new_hps(player_stats: &Stats, monster_stats: &Stats) -> f32 {
     monster_stats.hp - player_stats.atk
-}
-// System
-fn combat_system(
-    mut commands: Commands,
-    time: Res<Time>,
-    player_query: Query<(&Stats, &Location), With<Player>>,
-    mut monsters_query: Query<(Entity, &Name, (&mut Stats, &Location)), Without<Player>>,
-) {
-    let player = player_query.single();
-
-    if monsters_query.is_empty() {
-        eprintln!("No monster to fight");
-    }
-
-    for (entity_id, name, mut monster) in monsters_query.iter_mut() {
-        eprintln!(
-            "Player in {:?} will attack monster in {:?}",
-            player.1.position, monster.1.position
-        );
-
-        // Todo move into single function and unit test
-        attack(&mut commands, entity_id, &mut monster.0, player.0, name);
-    }
-}
-
-fn despawn(commands: &mut Commands, entity_id: Entity) -> () {
-    commands.entity(entity_id).despawn();
-}
-
-// Attack system
-// check it despawn a dead ennemy
-fn attack(
-    commands: &mut Commands,
-    entity_id: Entity,
-    monster_stats: &mut Stats,
-    player_stats: &Stats,
-    monster_name: &Name,
-) -> () {
-    monster_stats.hp = compute_new_hps(&player_stats, &monster_stats);
-    if monster_stats.hp <= 0.0 {
-        despawn(commands, entity_id);
-        // commands.entity(entity_id).despawn();
-        eprintln!("Monster {} has been killed", monster_name);
-    }
-    eprintln!("Monster {} has {} HP.", monster_name, monster_stats.hp);
 }
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-use crate::MAX_ATTACK_DISTANCE;
+use crate::HUMAN_MAX_RANGE;
 
 use super::{
     combat::HitMonsterEvent,
@@ -80,7 +80,7 @@ pub fn handle_mouse_click(
             };
 
             // If monster is close enough from player, we hit
-            if player_position.abs_diff_eq(monster_position, MAX_ATTACK_DISTANCE) {
+            if player_position.abs_diff_eq(monster_position, HUMAN_MAX_RANGE) {
                 println!("Hit monster !");
                 ev_monster_hit.send(HitMonsterEvent(parent.get()));
                 return;

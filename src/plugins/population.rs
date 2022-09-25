@@ -1,6 +1,11 @@
-use crate::{HUMAN_STEP_DISTANCE, MONSTER_STEP_DISTANCE};
+use std::time::{Instant, SystemTime};
 
-use super::{combat::HitMonsterEvent, location::Location};
+use crate::{
+    HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK, MONSTER_ATTACK_COOLDOWN,
+    MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE,
+};
+
+use super::location::Location;
 use bevy::prelude::*;
 
 pub struct PopulationPlugin;
@@ -13,6 +18,9 @@ impl Plugin for PopulationPlugin {
 
 #[derive(Component, Default)]
 pub struct Name(String);
+
+#[derive(Component)]
+pub struct LastAttack(pub Timer);
 
 #[derive(Component, Default)]
 pub struct Stats {
@@ -85,6 +93,20 @@ impl CreatureType {
             CreatureType::Monster => MONSTER_STEP_DISTANCE,
         }
     }
+
+    pub fn range(&self) -> f32 {
+        match self {
+            CreatureType::Human => HUMAN_MAX_RANGE,
+            CreatureType::Monster => MONSTER_MAX_RANGE,
+        }
+    }
+
+    fn attack(&self) -> f32 {
+        match self {
+            CreatureType::Human => HUMAN_ATK,
+            CreatureType::Monster => MONSTER_ATK,
+        }
+    }
 }
 
 fn spawn_creatures(mut commands: Commands, mut asset_server: Res<AssetServer>) -> () {
@@ -117,13 +139,17 @@ fn add_creature(
                 creature_type.clone(),
                 "Jbb".to_string(),
                 100.0,
-                20.0,
+                creature_type.attack(),
             ));
 
             if is_player {
                 ent.insert(Player);
             } else {
                 ent.insert(Monster);
+                ent.insert(LastAttack(Timer::from_seconds(
+                    MONSTER_ATTACK_COOLDOWN,
+                    false,
+                )));
             }
         })
         //
