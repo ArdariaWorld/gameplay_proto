@@ -1,10 +1,11 @@
-use super::location::Location;
+use super::{combat::HitMonsterEvent, location::Location};
 use bevy::prelude::*;
 
 pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_creatures);
+        app.add_startup_system(spawn_creatures)
+            .add_system(display_hps_system);
     }
 }
 
@@ -16,6 +17,9 @@ pub struct Stats {
     pub hp: f32,
     pub atk: f32,
 }
+
+#[derive(Component, Default)]
+struct HpsDisplay;
 
 #[derive(Default, Bundle)]
 pub struct PlayerBundle {
@@ -132,20 +136,56 @@ fn add_creature(
         //
         // Add Text
         .with_children(|parent| {
-            parent.spawn_bundle(Text2dBundle {
-                text: Text::from_section(
-                    100.0.to_string(),
-                    TextStyle {
-                        font_size: 40.0,
-                        color: Color::rgb(1., 1., 1.0),
-                        font: asset_server.load("fonts/FiraCode-Bold.ttf"),
+            parent
+                .spawn_bundle(Text2dBundle {
+                    text: Text::from_section(
+                        100.0.to_string(),
+                        TextStyle {
+                            font_size: 40.0,
+                            color: Color::rgb(1., 1., 1.0),
+                            font: asset_server.load("fonts/FiraCode-Bold.ttf"),
+                        },
+                    ),
+                    transform: Transform {
+                        translation: Vec3::new(-25., 60., -1.),
+                        ..default()
                     },
-                ),
-                transform: Transform {
-                    translation: Vec3::new(-25., 60., -1.),
                     ..default()
-                },
-                ..default()
-            });
+                })
+                .insert(HpsDisplay);
         });
+}
+
+fn get_child_hps(
+    children: &Children,
+    creatures_query: &Query<&Stats, With<Creature>>,
+) -> Option<f32> {
+    for &child in children.iter() {
+        match creatures_query.get(child) {
+            Ok(stats) => return Some(stats.hp),
+            Err(_) => None::<f32>,
+        };
+    }
+
+    None
+}
+
+fn display_hps_system(
+    entity_query: Query<(Entity, &Children)>,
+    creatures_query: Query<&Stats, With<Creature>>,
+    mut hps_display_query: Query<&mut Text, With<HpsDisplay>>,
+) {
+    // get the event
+    for (_, children) in entity_query.iter() {
+        if let Some(hps) = get_child_hps(&children, &creatures_query) {
+            for &child in children.iter() {
+                match hps_display_query.get_mut(child) {
+                    Ok(mut text) => {
+                        text.sections[0].value = format!("{}", hps);
+                    }
+                    Err(_) => (),
+                };
+            }
+        }
+    }
 }
