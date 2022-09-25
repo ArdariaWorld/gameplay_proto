@@ -14,16 +14,40 @@ impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(MonstersKilled { count: 0 })
             .add_event::<HitMonsterEvent>()
-            .add_event::<KillMonsterEvent>();
+            .add_event::<KillMonsterEvent>()
+            .add_system(monster_hit_system);
     }
 }
 
-// fn monster_hit_system(
-//     monsters_query: Query<(&Parent, &Creature), With<Monster>>,
-//     mut ev_levelup: EventReader<LevelUpEvent>,
-// ){
+fn monster_hit_system(
+    mut commands: Commands,
+    mut entity_query: Query<(Entity, &Children)>,
+    mut monsters_query: Query<&mut Stats>,
+    mut ev_hit_monster: EventReader<HitMonsterEvent>,
+) {
+    for ev in ev_hit_monster.iter() {
+        let (entity, children) = match entity_query.get_mut(ev.0) {
+            Ok(result) => result,
+            Err(e) => {
+                println!("Error entity not found {:?}", e);
+                continue;
+            }
+        };
 
-// }
+        for &child in children.iter() {
+            match monsters_query.get_mut(child) {
+                Ok(mut stats) => {
+                    stats.hp -= 10.;
+
+                    if stats.hp <= 0. {
+                        commands.entity(entity).despawn_recursive();
+                    }
+                }
+                Err(_) => (),
+            };
+        }
+    }
+}
 
 fn compute_new_hps(player_stats: &Stats, monster_stats: &Stats) -> f32 {
     monster_stats.hp - player_stats.atk
