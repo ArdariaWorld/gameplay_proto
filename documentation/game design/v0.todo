@@ -28,7 +28,7 @@
 [x] refactorize creatures/monster/player spawn
 
 # 0.4
-[] attack a monster
+[x] attack a monster
 [] kill a monster
 
 # 0.5

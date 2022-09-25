@@ -25,14 +25,16 @@ pub struct PlayerBundle {
 
 #[derive(Default, Bundle)]
 pub struct CreatureBundle {
+    pub creature: Creature,
     pub stats: Stats,
     pub name: Name,
     pub location: Location,
 }
 
 impl CreatureBundle {
-    fn new(name_str: String, hp: f32, atk: f32) -> CreatureBundle {
+    fn new(creature_type: CreatureType, name_str: String, hp: f32, atk: f32) -> CreatureBundle {
         CreatureBundle {
+            creature: Creature(creature_type),
             stats: Stats { hp, atk },
             name: Name(name_str),
             location: Location::new(),
@@ -46,14 +48,15 @@ pub struct Monster;
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Clone)]
-enum CreatureType {
+#[derive(Clone, Default, Debug)]
+pub enum CreatureType {
+    #[default]
     Human,
     Monster,
 }
 
 #[derive(Default, Component)]
-pub struct Creature;
+pub struct Creature(pub CreatureType);
 
 impl CreatureType {
     fn color(&self) -> Color {
@@ -63,7 +66,7 @@ impl CreatureType {
         }
     }
 
-    fn size(&self) -> Vec3 {
+    pub fn size(&self) -> Vec3 {
         match self {
             CreatureType::Human => Vec2::new(17.0, 40.0).extend(2.0),
             CreatureType::Monster => Vec2::new(25.0, 35.0).extend(1.0),
@@ -97,12 +100,17 @@ fn add_creature(
         //
         // Add Creature
         .with_children(|parent| {
-            let mut ent = parent.spawn_bundle(CreatureBundle::new("Jbb".to_string(), 100.0, 20.0));
-
-            ent.insert(Creature);
+            let mut ent = parent.spawn_bundle(CreatureBundle::new(
+                creature_type.clone(),
+                "Jbb".to_string(),
+                100.0,
+                20.0,
+            ));
 
             if is_player {
                 ent.insert(Player);
+            } else {
+                ent.insert(Monster);
             }
         })
         //

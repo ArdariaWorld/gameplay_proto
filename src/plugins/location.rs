@@ -4,7 +4,7 @@ use crate::{utils::vec::RandVec2, STEP_DISTANCE};
 
 use super::population::Creature;
 
-#[derive(Default, Component)]
+#[derive(Default, Component, Debug)]
 pub struct Location {
     pub destination: Option<Vec2>,
     pub max_velocity: Option<f32>,

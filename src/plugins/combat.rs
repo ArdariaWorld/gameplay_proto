@@ -1,6 +1,7 @@
 use super::{location::*, population::*};
 use bevy::prelude::*;
 
+pub struct HitMonsterEvent(pub Entity);
 pub struct KillMonsterEvent(Entity);
 
 #[derive(Default)]
@@ -12,9 +13,17 @@ pub struct CombatPlugin;
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(MonstersKilled { count: 0 })
+            .add_event::<HitMonsterEvent>()
             .add_event::<KillMonsterEvent>();
     }
 }
+
+// fn monster_hit_system(
+//     monsters_query: Query<(&Parent, &Creature), With<Monster>>,
+//     mut ev_levelup: EventReader<LevelUpEvent>,
+// ){
+
+// }
 
 fn compute_new_hps(player_stats: &Stats, monster_stats: &Stats) -> f32 {
     monster_stats.hp - player_stats.atk
