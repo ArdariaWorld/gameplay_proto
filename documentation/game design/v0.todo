@@ -44,7 +44,7 @@
 # 0.7
 ✔ player death @started(22-09-28 20:43) @done(22-09-28 20:59) @lasted(16m43s)
 ✔ game state @started(22-09-28 20:50) @done(22-09-28 20:59) @lasted(9m41s)
-[] respawn UI
+✔ respawn UI @started(22-09-28 21:00) @done(22-09-28 21:30) @lasted(30m33s)
 
 # 0.8
 [] collect resources

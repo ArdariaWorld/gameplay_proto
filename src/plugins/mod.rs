@@ -4,4 +4,5 @@ pub mod hud;
 pub mod inputs;
 pub mod location;
 pub mod population;
+pub mod ui;
 pub mod world;

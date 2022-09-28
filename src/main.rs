@@ -9,6 +9,7 @@ use plugins::{
     inputs::handle_mouse_click,
     location::LocationPlugin,
     population::PopulationPlugin,
+    ui::UiPlugin,
     world::{init_world_map, WorldMapBundle},
 };
 
@@ -50,6 +51,7 @@ fn main() {
         .add_system_set(SystemSet::on_update(GameState::Playing).with_system(handle_mouse_click))
         .add_plugin(LocationPlugin)
         .add_plugin(HudPlugin)
+        .add_plugin(UiPlugin)
         .add_system(camera_follow_player)
         .add_startup_system(init_world_map)
         .add_system(bevy::window::close_on_esc)
