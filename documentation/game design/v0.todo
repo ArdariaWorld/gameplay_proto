@@ -45,6 +45,7 @@
 ✔ player death @started(22-09-28 20:43) @done(22-09-28 20:59) @lasted(16m43s)
 ✔ game state @started(22-09-28 20:50) @done(22-09-28 20:59) @lasted(9m41s)
 ✔ respawn UI @started(22-09-28 21:00) @done(22-09-28 21:30) @lasted(30m33s)
+✔ respawn player when click button @started(22-09-28 21:30) @done(22-09-28 22:02) @lasted(32m4s)
 
 # 0.8
 [] collect resources
@@ -58,6 +59,9 @@
 
 # 0.11
 [] split plugin in several files
+
+# 0.12
+[] FIX respawn button -> https://github.com/ArdariaWorld/gameplay_proto/issues/1
 
 # 1.0
 [] release on web `prototype.ardaria.com`

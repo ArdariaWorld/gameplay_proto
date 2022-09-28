@@ -1,9 +1,9 @@
-use crate::HUMAN_MAX_RANGE;
+use crate::{utils::vec::RandVec2, GameState, HUMAN_MAX_RANGE};
 
 use super::{
     combat::HitMonsterEvent,
     location::Location,
-    population::{Creature, Monster, Player},
+    population::{Creature, Monster, Player, Stats},
 };
 use bevy::{
     input::{mouse::MouseButtonInput, ButtonState},
@@ -11,7 +11,73 @@ use bevy::{
     sprite::collide_aabb::collide,
 };
 
-pub fn handle_mouse_click(
+pub struct KillPlayerEvent();
+pub struct RespawnPlayerEvent();
+
+pub struct PlayerPlugin;
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_event::<KillPlayerEvent>()
+            .add_event::<RespawnPlayerEvent>()
+            .add_system_set(
+                SystemSet::on_update(GameState::Playing).with_system(handle_mouse_click),
+            )
+            .add_system(kill_player)
+            .add_system(respawn_player);
+    }
+}
+
+fn kill_player(
+    mut ev_kill_player: EventReader<KillPlayerEvent>,
+    mut state: ResMut<State<GameState>>,
+    mut player_query: Query<&mut Location, With<Player>>,
+) {
+    for _ in ev_kill_player.iter() {
+        // Set GameState as GameOver
+        match state.set(GameState::GameOver) {
+            Ok(_) => {
+                println!("Player just died");
+            }
+            Err(_) => (),
+        }
+
+        // Update destination so player stop moving
+        let mut location = match player_query.get_single_mut() {
+            Ok(result) => result,
+            Err(_) => return,
+        };
+
+        location.destination = None;
+    }
+}
+
+fn respawn_player(
+    mut ev_respawn_player: EventReader<RespawnPlayerEvent>,
+    mut state: ResMut<State<GameState>>,
+    mut player_query: Query<(&mut Location, &mut Stats), With<Player>>,
+) {
+    for _ in ev_respawn_player.iter() {
+        // Set GameState as Playing
+        match state.set(GameState::Playing) {
+            Ok(_) => {
+                println!("Player just died");
+            }
+            Err(_) => (),
+        }
+
+        // Update destination so player stop moving
+        let (mut location, mut stats) = match player_query.get_single_mut() {
+            Ok(result) => result,
+            Err(_) => return,
+        };
+
+        // Update player location and stats
+        stats.hp = 100.;
+        location.position = Some(RandVec2::new());
+    }
+}
+
+fn handle_mouse_click(
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
     windows: Res<Windows>,
     mut player_query: Query<&mut Location, With<Player>>,

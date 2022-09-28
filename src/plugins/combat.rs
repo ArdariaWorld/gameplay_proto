@@ -1,9 +1,7 @@
 use crate::{GameState, MONSTER_AGGRO_DISTANCE, MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE};
 
-use super::{location::*, population::*};
+use super::{location::*, player::KillPlayerEvent, population::*};
 use bevy::prelude::*;
-
-pub struct KillPlayerEvent();
 
 pub struct HitMonsterEvent(pub Entity);
 pub struct KillMonsterEvent(pub Entity);
@@ -19,7 +17,6 @@ impl Plugin for CombatPlugin {
         app.insert_resource(MonstersKilled { count: 0 })
             .add_event::<HitMonsterEvent>()
             .add_event::<KillMonsterEvent>()
-            .add_event::<KillPlayerEvent>()
             .add_system(monster_hit_system)
             .add_system(monster_aggro_system)
             .add_system(monster_fight_system);
@@ -101,7 +98,6 @@ fn monster_fight_system(
     >,
     mut player_query: Query<(&Location, &mut Stats), With<Player>>,
     mut ev_kill_player: EventWriter<KillPlayerEvent>,
-    mut state: ResMut<State<GameState>>,
 ) {
     // Get player position
     let (player_position, mut player_stats) = match player_query.get_single_mut() {
@@ -131,14 +127,7 @@ fn monster_fight_system(
 
             if player_stats.hp <= 0. {
                 player_stats.hp = 0.;
-
-                match state.set(GameState::GameOver) {
-                    Ok(_) => {
-                        println!("Player just died");
-                    }
-                    Err(_) => (),
-                }
-                // ev_kill_player.send(KillPlayerEvent());
+                ev_kill_player.send(KillPlayerEvent());
             }
         }
     }

@@ -1,12 +1,24 @@
 use bevy::prelude::*;
 
+use crate::GameState;
+
+use super::player::RespawnPlayerEvent;
+
 #[derive(Component)]
 pub struct Button;
+
+#[derive(Component)]
+pub struct Menu;
 
 pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(init_ui_system)
+            .add_system_set(SystemSet::on_enter(GameState::GameOver).with_system(open_menu_system))
+            .add_system_set(
+                SystemSet::on_enter(GameState::GameOver).with_system(interaction_button_system),
+            )
+            .add_system_set(SystemSet::on_exit(GameState::GameOver).with_system(close_menu_system))
             .add_system(interaction_button_system);
     }
 }
@@ -21,6 +33,7 @@ fn interaction_button_system(
         (Changed<Interaction>, With<Button>),
     >,
     mut text_query: Query<&mut Text>,
+    mut ev_respawn_player: EventWriter<RespawnPlayerEvent>,
 ) {
     for (interaction, mut color, children) in &mut interaction_query {
         let mut text = text_query.get_mut(children[0]).unwrap();
@@ -28,6 +41,7 @@ fn interaction_button_system(
             Interaction::Clicked => {
                 text.sections[0].value = "Press".to_string();
                 *color = PRESSED_BUTTON.into();
+                ev_respawn_player.send(RespawnPlayerEvent());
             }
             Interaction::Hovered => {
                 text.sections[0].value = "Hover".to_string();
@@ -44,6 +58,7 @@ fn interaction_button_system(
 fn init_ui_system(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn_bundle(NodeBundle {
+            visibility: Visibility { is_visible: false },
             style: Style {
                 size: Size {
                     width: Val::Percent(100.),
@@ -90,5 +105,30 @@ fn init_ui_system(mut commands: Commands, asset_server: Res<AssetServer>) {
                     ));
                 })
                 .insert(Button);
-        });
+        })
+        .insert(Menu);
+}
+
+fn open_menu_system(mut menu_query: Query<&mut Visibility, With<Menu>>) {
+    let mut visibility = match menu_query.get_single_mut() {
+        Ok(menu) => menu,
+        Err(_) => {
+            println!("Cannot find menu");
+            return;
+        }
+    };
+
+    visibility.is_visible = true;
+}
+
+fn close_menu_system(mut menu_query: Query<&mut Visibility, With<Menu>>) {
+    let mut visibility = match menu_query.get_single_mut() {
+        Ok(menu) => menu,
+        Err(_) => {
+            println!("Cannot find menu");
+            return;
+        }
+    };
+
+    visibility.is_visible = false;
 }
