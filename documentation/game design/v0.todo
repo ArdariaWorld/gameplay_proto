@@ -42,16 +42,21 @@
 [x] monster attack player @started(22-09-25 20:39) @done(22-09-25 21:21) @lasted(42m39s)
 
 # 0.7
-[] player death
-[] player auto respawn
+✔ player death @started(22-09-28 20:43) @done(22-09-28 20:59) @lasted(16m43s)
+✔ game state @started(22-09-28 20:50) @done(22-09-28 20:59) @lasted(9m41s)
+[] respawn UI
+
+# 0.8
 [] collect resources
 [] heal player
 
-# 0.8
+# 0.9
 [] respawn monsters
 
-# 0.9
+# 0.10
 [] refactorize code -> use ControlFlow with <?> operator
+
+# 0.11
 [] split plugin in several files
 
 # 1.0

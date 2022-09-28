@@ -1,4 +1,4 @@
-use crate::{MONSTER_AGGRO_DISTANCE, MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE};
+use crate::{GameState, MONSTER_AGGRO_DISTANCE, MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE};
 
 use super::{location::*, population::*};
 use bevy::prelude::*;
@@ -100,6 +100,8 @@ fn monster_fight_system(
         (With<Monster>, Without<Player>),
     >,
     mut player_query: Query<(&Location, &mut Stats), With<Player>>,
+    mut ev_kill_player: EventWriter<KillPlayerEvent>,
+    mut state: ResMut<State<GameState>>,
 ) {
     // Get player position
     let (player_position, mut player_stats) = match player_query.get_single_mut() {
@@ -126,6 +128,18 @@ fn monster_fight_system(
 
             // monster to attack player
             player_stats.hp -= stats.atk;
+
+            if player_stats.hp <= 0. {
+                player_stats.hp = 0.;
+
+                match state.set(GameState::GameOver) {
+                    Ok(_) => {
+                        println!("Player just died");
+                    }
+                    Err(_) => (),
+                }
+                // ev_kill_player.send(KillPlayerEvent());
+            }
         }
     }
 }

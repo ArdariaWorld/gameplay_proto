@@ -28,6 +28,12 @@ pub const WORLD_WIDTH: f32 = 800.0;
 pub const WORLD_HEIGHT: f32 = 400.0;
 pub const WALL_COLOR: Color = Color::rgb(0.8, 0.4, 0.2);
 
+#[derive(Clone, Eq, PartialEq, Debug, Hash)]
+enum GameState {
+    Playing,
+    GameOver,
+}
+
 #[derive(Default)]
 pub struct Game {
     // here add game state
@@ -38,9 +44,10 @@ fn main() {
     App::new()
         .init_resource::<Game>()
         .add_plugins(DefaultPlugins)
+        .add_state(GameState::Playing)
         .add_plugin(CombatPlugin)
         .add_plugin(PopulationPlugin)
-        .add_system(handle_mouse_click)
+        .add_system_set(SystemSet::on_update(GameState::Playing).with_system(handle_mouse_click))
         .add_plugin(LocationPlugin)
         .add_plugin(HudPlugin)
         .add_system(camera_follow_player)
