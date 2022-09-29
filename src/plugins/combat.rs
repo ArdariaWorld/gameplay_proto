@@ -1,4 +1,4 @@
-use crate::{GameState, MONSTER_AGGRO_DISTANCE, MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE};
+use crate::{MONSTER_AGGRO_DISTANCE, MONSTER_MAX_RANGE};
 
 use super::{location::*, player::KillPlayerEvent, population::*};
 use bevy::prelude::*;

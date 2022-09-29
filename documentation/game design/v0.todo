@@ -48,14 +48,17 @@
 ✔ respawn player when click button @started(22-09-28 21:30) @done(22-09-28 22:02) @lasted(32m4s)
 
 # 0.8
-[] collect resources
-[] heal player
+✔ refactorize player code -> use ControlFlow with <?> operator @started(22-09-29 21:19) @done(22-09-29 23:18) @lasted(1h59m8s)
+[] refactorize all code with <?> operator
+[] place heal resources on the map
+[] collecting resources heals player
 
 # 0.9
 [] respawn monsters
+[] monsters don't stack
 
 # 0.10
-[] refactorize code -> use ControlFlow with <?> operator
+[] Setup tests
 
 # 0.11
 [] split plugin in several files
