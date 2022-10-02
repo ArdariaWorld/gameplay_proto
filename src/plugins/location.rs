@@ -1,7 +1,5 @@
 use bevy::prelude::*;
-use bevy_rapier2d::{na::vector, prelude::Velocity};
-
-use crate::utils::vec::RandVec2;
+use bevy_rapier2d::prelude::Velocity;
 
 use super::population::Creature;
 
@@ -15,10 +13,7 @@ pub struct Location {
 
 impl Location {
     pub fn new() -> Location {
-        Location {
-            position: Some(RandVec2::new()),
-            ..default()
-        }
+        Location { ..default() }
     }
 }
 
@@ -37,11 +32,12 @@ fn location_system(
     for (parent_entity, mut location, creature) in creatures_query.iter_mut() {
         // Get entity position
         if let Ok((translation, mut velocity)) = q_parent.get_mut(parent_entity.get()) {
-            // Update location if entity have a destination
-            if let Some(destination) = location.destination {
-                let creature_position = translation.translation.truncate();
-                location.position = Some(creature_position);
+            // Update location from parent translation
+            let creature_position = translation.translation.truncate();
+            location.position = Some(creature_position);
 
+            // Set a velocity if creature has a detination
+            if let Some(destination) = location.destination {
                 // if transform.translation is close enough to destination, remove destination
                 if destination
                     .abs_diff_eq(creature_position, creature.0.speed() * time.delta_seconds())

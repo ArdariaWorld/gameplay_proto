@@ -51,8 +51,8 @@
 ✔ refactorize player code -> use ControlFlow with <?> operator @started(22-09-29 21:19) @done(22-09-29 23:18) @lasted(1h59m8s)
 
 # 0.9
-[] implement rapier physic engine into bevy @started(22-10-02 20:26)
-[] monsters don't stack
+✔ implement rapier physic engine into bevy @started(22-10-02 20:26) @done(22-10-02 21:56) @lasted(1h30m52s)
+✔ monsters don't stack @done(22-10-02 21:56)
 
 [] refactorize all code with <?> operator
 [] place heal resources on the map

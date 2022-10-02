@@ -1,6 +1,6 @@
 use crate::{
-    HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK, MONSTER_ATTACK_COOLDOWN,
-    MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE,
+    utils::vec::RandVec2, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
+    MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE,
 };
 
 use super::location::Location;
@@ -126,16 +126,29 @@ fn add_creature(
         false => CreatureType::Monster,
     };
 
+    let dominance_group = match is_player {
+        true => 1,
+        false => 0,
+    };
+
     commands
         .spawn_bundle(SpatialBundle {
-            transform: Transform::from_scale(Vec3::splat(1.)),
+            transform: Transform::from_translation(RandVec2::new().extend(1.)),
             ..default()
         })
         .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity {
             linvel: Vec2::new(0., 0.),
             angvel: 0.,
         })
+        .insert(Collider::cuboid(
+            creature_type.size().x,
+            creature_type.size().y,
+        ))
+        .insert(Friction::coefficient(0.7))
+        .insert(Restitution::coefficient(3.))
+        .insert(Dominance::group(dominance_group))
         //
         // Add Creature
         .with_children(|parent| {
@@ -161,12 +174,12 @@ fn add_creature(
         .with_children(|parent| {
             parent.spawn_bundle(SpriteBundle {
                 transform: Transform {
-                    scale: creature_type.size(),
                     translation: Vec2::splat(0.).extend(-1.),
                     ..default()
                 },
                 sprite: Sprite {
                     color: creature_type.color(),
+                    custom_size: Some(creature_type.size().truncate() * 2.),
                     ..default()
                 },
                 ..default()
