@@ -13,6 +13,8 @@ use plugins::{
     world::{init_world_map, WorldMapBundle},
 };
 
+use bevy_rapier2d::prelude::*;
+
 pub const HUMAN_STEP_DISTANCE: f32 = 150.;
 pub const MONSTER_STEP_DISTANCE: f32 = 100.;
 
@@ -45,6 +47,8 @@ fn main() {
     App::new()
         .init_resource::<Game>()
         .add_plugins(DefaultPlugins)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugin(RapierDebugRenderPlugin::default())
         .add_state(GameState::Playing)
         .add_plugin(CombatPlugin)
         .add_plugin(PopulationPlugin)

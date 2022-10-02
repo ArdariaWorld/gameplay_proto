@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_rapier2d::{na::vector, prelude::Velocity};
 
 use crate::utils::vec::RandVec2;
 
@@ -31,27 +32,31 @@ impl Plugin for LocationPlugin {
 fn location_system(
     time: Res<Time>,
     mut creatures_query: Query<(&Parent, &mut Location, &Creature), With<Creature>>,
-    mut q_parent: Query<&mut Transform>,
+    mut q_parent: Query<(&Transform, &mut Velocity)>,
 ) {
     for (parent_entity, mut location, creature) in creatures_query.iter_mut() {
-        // Update location if entity have a destination
-        if let (Some(destination), Some(position)) = (location.destination, location.position) {
-            // compute vector from position to destination
-            let delta_v = destination - position;
-            let new_positon =
-                position + delta_v.normalize() * creature.0.speed() * time.delta_seconds();
+        // Get entity position
+        if let Ok((translation, mut velocity)) = q_parent.get_mut(parent_entity.get()) {
+            // Update location if entity have a destination
+            if let Some(destination) = location.destination {
+                let creature_position = translation.translation.truncate();
+                location.position = Some(creature_position);
 
-            // apply new vector to position to get new_posittion
-            if !destination.abs_diff_eq(new_positon, creature.0.speed() * time.delta_seconds()) {
-                location.position = Some(new_positon);
+                // if transform.translation is close enough to destination, remove destination
+                if destination
+                    .abs_diff_eq(creature_position, creature.0.speed() * time.delta_seconds())
+                {
+                    location.destination = None;
+                    velocity.linvel = Vec2::new(0., 0.);
+                    return;
+                }
+
+                // Get normalized vector to destination
+                let direction = (destination - creature_position).normalize();
+                velocity.linvel = direction * creature.0.speed();
+            } else {
+                velocity.linvel = Vec2::new(0., 0.);
             }
-        }
-
-        // Update parent transform from creature computed position
-        if let (Ok(mut parent_transform), Some(position)) =
-            (q_parent.get_mut(parent_entity.get()), location.position)
-        {
-            parent_transform.translation = position.extend(2.);
         }
     }
 }

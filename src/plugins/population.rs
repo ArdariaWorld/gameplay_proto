@@ -5,6 +5,7 @@ use crate::{
 
 use super::location::Location;
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
@@ -129,6 +130,11 @@ fn add_creature(
         .spawn_bundle(SpatialBundle {
             transform: Transform::from_scale(Vec3::splat(1.)),
             ..default()
+        })
+        .insert(RigidBody::Dynamic)
+        .insert(Velocity {
+            linvel: Vec2::new(0., 0.),
+            angvel: 0.,
         })
         //
         // Add Creature

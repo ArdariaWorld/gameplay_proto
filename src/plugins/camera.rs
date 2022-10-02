@@ -1,15 +1,16 @@
-use bevy::prelude::{Camera, Query, Transform, With};
+use bevy::prelude::{Camera, Parent, Query, Transform, With, Without};
 
-use super::{location::Location, population::Player};
+use super::population::Player;
 
 pub fn camera_follow_player(
-    player_query: Query<&Location, With<Player>>,
+    player_query: Query<&Parent, With<Player>>,
     mut camera_query: Query<&mut Transform, With<Camera>>,
+    mut q_parent: Query<&Transform, Without<Camera>>,
 ) {
-    let player_location = player_query.get_single().expect("No player location");
+    let parent_entity = player_query.get_single().expect("No player location");
     let mut camera_transform = camera_query.get_single_mut().expect("No camera transform");
 
-    if let Some(position) = player_location.position {
-        camera_transform.translation = position.extend(1.);
+    if let Ok(transform) = q_parent.get_mut(parent_entity.get()) {
+        camera_transform.translation = transform.translation;
     }
 }
