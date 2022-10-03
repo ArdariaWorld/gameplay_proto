@@ -144,8 +144,12 @@ fn add_creature(
         })
         .insert(Collider::cuboid(
             creature_type.size().x,
-            creature_type.size().y,
+            creature_type.size().x,
         ))
+        .insert(Damping {
+            linear_damping: 0.5,
+            angular_damping: 0.,
+        })
         .insert(Friction::coefficient(0.7))
         .insert(Restitution::coefficient(3.))
         .insert(Dominance::group(dominance_group))
@@ -174,7 +178,7 @@ fn add_creature(
         .with_children(|parent| {
             parent.spawn_bundle(SpriteBundle {
                 transform: Transform {
-                    translation: Vec2::splat(0.).extend(-1.),
+                    translation: Vec3::new(0., creature_type.size().y / 2., -1.),
                     ..default()
                 },
                 sprite: Sprite {

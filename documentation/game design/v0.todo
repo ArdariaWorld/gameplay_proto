@@ -53,7 +53,9 @@
 # 0.9
 ✔ implement rapier physic engine into bevy @started(22-10-02 20:26) @done(22-10-02 21:56) @lasted(1h30m52s)
 ✔ monsters don't stack @done(22-10-02 21:56)
+✔ reduce colider to a square to simulate perspective @done(22-10-03 09:51)
 
+# 0.10
 [] refactorize all code with <?> operator
 [] place heal resources on the map
 [] collecting resources heals player
