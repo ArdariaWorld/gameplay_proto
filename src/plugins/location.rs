@@ -3,7 +3,7 @@ use bevy_rapier2d::prelude::Velocity;
 
 use crate::utils::error::ErrorMessage;
 
-use super::population::Creature;
+use super::population::{Creature, Player};
 
 #[derive(Default, Component, Debug)]
 pub struct Location {
@@ -28,7 +28,10 @@ impl Plugin for LocationPlugin {
 
 fn location_system(
     time: Res<Time>,
-    mut creatures_query: Query<(&Parent, &mut Location, &Creature), With<Creature>>,
+    mut creatures_query: Query<
+        (&Parent, &mut Location, &Creature),
+        (With<Creature>, Without<Player>),
+    >,
     mut q_parent: Query<(&Transform, &mut Velocity)>,
 ) {
     let mut closure = || {

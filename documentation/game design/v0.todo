@@ -57,7 +57,9 @@
 
 # 0.10
 ✔ refactorize all code with <?> operator @started(22-10-09 14:03) @done(22-10-09 14:18) @lasted(15m44s)
-
+✔ move with WASD @started(22-10-09 14:20) @done(22-10-09 14:54) @lasted(34m55s)
+[] left click => sword
+[] right click => arrow
 
 
 # Backlog
