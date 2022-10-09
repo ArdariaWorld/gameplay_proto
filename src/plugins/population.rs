@@ -1,17 +1,38 @@
+use std::sync::Arc;
+
 use crate::{
-    utils::vec::RandVec2, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
+    utils::vec::RandVec2, GameState, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
     MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE,
 };
 
-use super::location::Location;
+use super::{location::Location, player};
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
+use bevy_inspector_egui::Inspectable;
+use bevy_rapier2d::{
+    prelude::*,
+    rapier::prelude::{ColliderHandle, RoundShape, Shape, SharedShape},
+};
 
 pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_creatures)
-            .add_system(display_hps_system);
+            .add_system(display_hps_system)
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(display_events));
+    }
+}
+
+/* A system that displays the events. */
+fn display_events(
+    mut collision_events: EventReader<CollisionEvent>,
+    mut contact_force_events: EventReader<ContactForceEvent>,
+) {
+    for collision_event in collision_events.iter() {
+        println!("Received collision event: {:?}", collision_event);
+    }
+
+    for contact_force_event in contact_force_events.iter() {
+        println!("Received contact force event: {:?}", contact_force_event);
     }
 }
 
@@ -61,6 +82,9 @@ pub struct Monster;
 #[derive(Component)]
 pub struct Player;
 
+#[derive(Component, Inspectable)]
+pub struct PlayerSwordRange;
+
 #[derive(Clone, Default, Debug)]
 pub enum CreatureType {
     #[default]
@@ -108,17 +132,27 @@ impl CreatureType {
     }
 }
 
-fn spawn_creatures(mut commands: Commands, mut asset_server: Res<AssetServer>) -> () {
-    add_creature(&mut commands, &mut asset_server, true);
+fn spawn_creatures(
+    mut commands: Commands,
+    mut asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) -> () {
+    add_creature(&mut commands, &mut asset_server, &mut texture_atlases, true);
 
     for _ in 0..10 {
-        add_creature(&mut commands, &mut asset_server, false);
+        add_creature(
+            &mut commands,
+            &mut asset_server,
+            &mut texture_atlases,
+            false,
+        );
     }
 }
 
 fn add_creature(
     commands: &mut Commands,
     asset_server: &mut Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     is_player: bool,
 ) -> () {
     let creature_type = match is_player {
@@ -129,6 +163,35 @@ fn add_creature(
     let dominance_group = match is_player {
         true => 1,
         false => 0,
+    };
+
+    let convex_polyline_opt = Collider::convex_polyline(Vec::from([
+        Vect::new(0., 0.) * 100.,
+        Vect::new(0., 1.) * 100.,
+        Vect::new(0.5, 0.866) * 100.,
+        Vect::new(0.707, 0.707) * 100.,
+        Vect::new(0.866, 0.5) * 100.,
+        Vect::new(1., 0.) * 100.,
+    ]));
+
+    let convex_hull_opt = Collider::round_convex_hull(
+        &[
+            Vect::new(0., 0.),
+            Vect::new(-100., 0.),
+            Vect::new(-80., -80.),
+            Vect::new(0., -100.),
+        ],
+        1.,
+    );
+
+    // Setup the sprite sheet
+    let texture_handle = asset_server.load("images/hitZone.png");
+    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(300.0, 300.0), 1, 1);
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    let convex_polyline = match convex_polyline_opt {
+        Some(it) => it,
+        _ => return,
     };
 
     commands
@@ -142,17 +205,36 @@ fn add_creature(
             linvel: Vec2::new(0., 0.),
             angvel: 0.,
         })
-        .insert(Collider::cuboid(
-            creature_type.size().x,
-            creature_type.size().x,
-        ))
-        .insert(Damping {
-            linear_damping: 0.5,
-            angular_damping: 0.,
+        //
+        // Box creature collider
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert(Collider::cuboid(
+                    creature_type.size().x,
+                    creature_type.size().x,
+                ))
+                .insert(Damping {
+                    linear_damping: 0.5,
+                    angular_damping: 0.,
+                })
+                .insert(Friction::coefficient(0.7))
+                .insert(Restitution::coefficient(3.))
+                .insert(Dominance::group(dominance_group));
         })
-        .insert(Friction::coefficient(0.7))
-        .insert(Restitution::coefficient(3.))
-        .insert(Dominance::group(dominance_group))
+        //
+        // Sword range collider
+        .with_children(|parent| {
+            if is_player {
+                let mut ent = parent.spawn();
+                ent.insert(convex_polyline)
+                    .insert_bundle(TransformBundle::from(Transform::from_rotation(
+                        Quat::from_rotation_z(0.),
+                    )))
+                    .insert(Sensor)
+                    .insert(PlayerSwordRange);
+            }
+        })
         //
         // Add Creature
         .with_children(|parent| {
@@ -173,12 +255,26 @@ fn add_creature(
                 )));
             }
         })
+        .with_children(|parent| {
+            if is_player {
+                parent.spawn_bundle(SpriteSheetBundle {
+                    texture_atlas: texture_atlas_handle.clone(),
+                    transform: Transform {
+                        rotation: Quat::from_rotation_z(-2.3),
+                        scale: Vec3::splat(0.65),
+                        ..default()
+                    },
+                    sprite: TextureAtlasSprite::new(0),
+                    ..Default::default()
+                });
+            }
+        })
         //
         // Add Sprite
         .with_children(|parent| {
             parent.spawn_bundle(SpriteBundle {
                 transform: Transform {
-                    translation: Vec3::new(0., creature_type.size().y / 2., -1.),
+                    translation: Vec3::new(0., creature_type.size().y / 2., -1.1),
                     ..default()
                 },
                 sprite: Sprite {
@@ -203,7 +299,7 @@ fn add_creature(
                         },
                     ),
                     transform: Transform {
-                        translation: Vec3::new(-25., 60., -1.),
+                        translation: Vec3::new(-25., 60., -20.),
                         ..default()
                     },
                     ..default()

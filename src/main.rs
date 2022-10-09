@@ -2,6 +2,7 @@ pub mod plugins;
 pub mod utils;
 
 use bevy::prelude::*;
+use bevy_inspector_egui::WorldInspectorPlugin;
 use plugins::{
     camera::camera_follow_player,
     combat::CombatPlugin,
@@ -13,7 +14,7 @@ use plugins::{
     world::{init_world_map, WorldMapBundle},
 };
 
-use bevy_rapier2d::prelude::*;
+use bevy_rapier2d::{prelude::*, rapier::prelude::Vector};
 
 pub const HUMAN_STEP_DISTANCE: f32 = 150.;
 pub const MONSTER_STEP_DISTANCE: f32 = 100.;
@@ -47,6 +48,7 @@ fn main() {
     App::new()
         .init_resource::<Game>()
         .add_plugins(DefaultPlugins)
+        .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_state(GameState::Playing)
