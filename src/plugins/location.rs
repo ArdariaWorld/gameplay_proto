@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::Velocity;
 
+use crate::utils::error::ErrorMessage;
+
 use super::population::Creature;
 
 #[derive(Default, Component, Debug)]
@@ -29,14 +31,15 @@ fn location_system(
     mut creatures_query: Query<(&Parent, &mut Location, &Creature), With<Creature>>,
     mut q_parent: Query<(&Transform, &mut Velocity)>,
 ) {
-    for (parent_entity, mut location, creature) in creatures_query.iter_mut() {
-        // Get entity position
-        if let Ok((translation, mut velocity)) = q_parent.get_mut(parent_entity.get()) {
+    let mut closure = || {
+        for (parent_entity, mut location, creature) in creatures_query.iter_mut() {
+            // Get entity position
+            let (translation, mut velocity) = q_parent.get_mut(parent_entity.get())?;
+
             // Update location from parent translation
             let creature_position = translation.translation.truncate();
             location.position = Some(creature_position);
 
-            // Set a velocity if creature has a detination
             if let Some(destination) = location.destination {
                 // if transform.translation is close enough to destination, remove destination
                 if destination
@@ -44,7 +47,7 @@ fn location_system(
                 {
                     location.destination = None;
                     velocity.linvel = Vec2::new(0., 0.);
-                    return;
+                    return Ok(());
                 }
 
                 // Get normalized vector to destination
@@ -54,6 +57,12 @@ fn location_system(
                 velocity.linvel = Vec2::new(0., 0.);
             }
         }
+
+        Ok::<(), ErrorMessage>(())
+    };
+
+    if let Err(error) = closure() {
+        println!("Error while handling click: {}", error);
     }
 }
 

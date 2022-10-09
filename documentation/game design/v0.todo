@@ -56,36 +56,19 @@
 ✔ reduce colider to a square to simulate perspective @done(22-10-03 09:51)
 
 # 0.10
-[] refactorize all code with <?> operator
+✔ refactorize all code with <?> operator @started(22-10-09 14:03) @done(22-10-09 14:18) @lasted(15m44s)
+
+
+
+# Backlog
 [] place heal resources on the map
 [] collecting resources heals player
-
 [] respawn monsters
-
-# 0.10
+[] better fight system (click on head skill)
 [] Setup tests
-
-# 0.11
 [] split plugin in several files
-
-# 0.12
 [] FIX respawn button -> https://github.com/ArdariaWorld/gameplay_proto/issues/1
-
-# 1.0
 [] release on web `prototype.ardaria.com`
-
-
-
-[] coordinates system (SERVER)
-[] game state PLAYING - PAUSE
-[] GAME_OVER when timer ends
-[] spawn monsters at coordinates (SERVER)
-[] movement system for player (SERVER)
-[] input for choose new coordinates -> CLIENT
-[] move feedback -> CLIENT
-[] attack monster (SERVER) -> input for attack (CLIENT)
-
-# 0.X
 [] IA
 [] monster roam
 [] monster aggro

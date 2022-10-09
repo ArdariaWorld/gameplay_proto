@@ -1,4 +1,7 @@
-use bevy::ecs::{query::QuerySingleError, schedule::StateError};
+use bevy::ecs::{
+    query::{QueryEntityError, QuerySingleError},
+    schedule::StateError,
+};
 
 // https://github.com/dtolnay - living rust god
 use thiserror::Error;
@@ -8,6 +11,9 @@ pub enum ErrorMessage {
     #[error("Query failed")]
     BevyQueryError(#[from] QuerySingleError),
 
+    #[error("Entity query failed")]
+    BevyQueryEntityError(#[from] QueryEntityError),
+
     #[error("Cannot set game state")]
     BevyStateError(#[from] StateError),
 
@@ -16,4 +22,7 @@ pub enum ErrorMessage {
 
     #[error("No cursor positon")]
     NoCursorPosition,
+
+    #[error("No entity destination")]
+    NoDestination,
 }
