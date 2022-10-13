@@ -208,23 +208,17 @@ fn add_creature(
             linvel: Vec2::new(0., 0.),
             angvel: 0.,
         })
-        //
-        // Box creature collider
-        .with_children(|parent| {
-            parent
-                .spawn()
-                .insert(Collider::cuboid(
-                    creature_type.size().x,
-                    creature_type.size().x,
-                ))
-                .insert(Damping {
-                    linear_damping: 0.5,
-                    angular_damping: 0.,
-                })
-                .insert(Friction::coefficient(0.7))
-                .insert(Restitution::coefficient(3.))
-                .insert(Dominance::group(dominance_group));
+        .insert(Collider::cuboid(
+            creature_type.size().x,
+            creature_type.size().x,
+        ))
+        .insert(Damping {
+            linear_damping: 0.5,
+            angular_damping: 0.,
         })
+        .insert(Friction::coefficient(0.7))
+        .insert(Restitution::coefficient(3.))
+        .insert(Dominance::group(dominance_group))
         //
         // Sword range collider
         .with_children(|parent| {

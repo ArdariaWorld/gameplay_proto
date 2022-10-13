@@ -22,9 +22,6 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<KillPlayerEvent>()
             .add_event::<RespawnPlayerEvent>()
-            .add_system_set(
-                SystemSet::on_update(GameState::Playing).with_system(mouse_click_system),
-            )
             .add_system_set(SystemSet::on_update(GameState::Playing).with_system(wasd_movement))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
@@ -152,6 +149,7 @@ fn mouse_left_click_system(
         (With<PlayerSwordRange>, Without<PlayerSwordRangeSensor>),
     >,
     q_parent: Query<&Transform, (Without<PlayerSwordRangeSensor>, Without<PlayerSwordRange>)>,
+    mut ev_monster_hit: EventWriter<HitMonsterEvent>,
 ) {
     let mut closure = || {
         for event in mouse_button_input_events.iter() {
@@ -205,6 +203,7 @@ fn mouse_left_click_system(
                 &collider,
                 filter,
                 |entity| {
+                    ev_monster_hit.send(HitMonsterEvent(entity));
                     println!("The entity {:?} intersects our shape.", entity);
                     true // Return `false` instead if we want to stop searching for other colliders that contain this point.
                 },
