@@ -2,7 +2,6 @@ use crate::{MONSTER_AGGRO_DISTANCE, MONSTER_MAX_RANGE};
 
 use super::{location::*, player::KillPlayerEvent, population::*};
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::{Collider, QueryFilter, RapierContext, Rot};
 
 pub struct HitMonsterEvent(pub Entity);
 pub struct KillMonsterEvent(pub Entity);
@@ -22,37 +21,6 @@ impl Plugin for CombatPlugin {
             .add_system(monster_aggro_system)
             .add_system(monster_fight_system);
     }
-}
-
-/* Test intersections inside of a system. */
-fn test_intersections(
-    rapier_context: Res<RapierContext>,
-    player_collider_query: Query<(&Parent, Entity, &Collider), With<PlayerSwordRange>>,
-    q_parent: Query<&Transform, Without<PlayerSwordRange>>,
-) {
-    let (parent_entity, self_entity, collider) = player_collider_query
-        .get_single()
-        .expect("No player collider");
-
-    let transform = q_parent
-        .get(parent_entity.get())
-        .expect("No parent transform");
-
-    // TODO how to exclude more than 1 collider?
-    let filter = QueryFilter::default()
-        .exclude_collider(self_entity)
-        .exclude_rigid_body(parent_entity.get());
-
-    // rapier_context.intersections_with_shape(
-    //     (transform.translation).truncate(),
-    //     transform.rotation.z,
-    //     &collider,
-    //     filter,
-    //     |entity| {
-    //         println!("The entity {:?} intersects our shape.", entity);
-    //         true // Return `false` instead if we want to stop searching for other colliders that contain this point.
-    //     },
-    // );
 }
 
 fn monster_hit_system(
@@ -98,8 +66,6 @@ fn monster_aggro_system(
     mut monsters_query: Query<&mut Location, (With<Monster>, Without<Player>)>,
     player_query: Query<&Location, With<Player>>,
 ) {
-    return;
-
     // Get player position
     let player_position = match player_query.get_single() {
         Ok(location) => match location.position {
@@ -167,13 +133,13 @@ fn monster_fight_system(
     }
 }
 
-fn compute_new_hps(player_stats: &Stats, monster_stats: &Stats) -> f32 {
-    monster_stats.hp - player_stats.atk
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::plugins::{combat::compute_new_hps, population::Stats};
+    use crate::plugins::population::Stats;
+
+    fn compute_new_hps(player_stats: &Stats, monster_stats: &Stats) -> f32 {
+        monster_stats.hp - player_stats.atk
+    }
 
     #[test]
     fn test_attack() {

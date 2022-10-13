@@ -14,7 +14,7 @@ use plugins::{
     world::{init_world_map, WorldMapBundle},
 };
 
-use bevy_rapier2d::{prelude::*, rapier::prelude::Vector};
+use bevy_rapier2d::prelude::*;
 
 pub const HUMAN_STEP_DISTANCE: f32 = 150.;
 pub const MONSTER_STEP_DISTANCE: f32 = 100.;

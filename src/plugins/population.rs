@@ -1,17 +1,12 @@
-use std::sync::Arc;
-
 use crate::{
     utils::vec::RandVec2, GameState, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
     MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE,
 };
 
-use super::{location::Location, player};
+use super::location::Location;
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
-use bevy_rapier2d::{
-    prelude::*,
-    rapier::prelude::{ColliderHandle, RoundShape, Shape, SharedShape},
-};
+use bevy_rapier2d::prelude::*;
 
 pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
@@ -176,16 +171,6 @@ fn add_creature(
         Vect::new(0.866, 0.5) * 100.,
         Vect::new(1., 0.) * 100.,
     ]));
-
-    let convex_hull_opt = Collider::round_convex_hull(
-        &[
-            Vect::new(0., 0.),
-            Vect::new(-100., 0.),
-            Vect::new(-80., -80.),
-            Vect::new(0., -100.),
-        ],
-        1.,
-    );
 
     // Setup the sprite sheet
     let texture_handle = asset_server.load("images/hitZone.png");
