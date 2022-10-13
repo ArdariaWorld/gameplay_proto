@@ -27,7 +27,8 @@ impl Plugin for CombatPlugin {
             .add_system(monster_hit_system)
             .add_system(monster_aggro_system)
             .add_system(monster_fight_system)
-            .add_system(fire_projectile_system);
+            .add_system(fire_projectile_system)
+            .add_system(display_events);
     }
 }
 
@@ -55,6 +56,7 @@ fn fire_projectile_system(
             .insert(Friction::coefficient(0.7))
             .insert(Restitution::coefficient(5.))
             .insert(Dominance::group(2))
+            .insert(Projectile)
             .insert(ExternalImpulse {
                 impulse: Vec2::from_angle(ev.0) * 50.,
                 torque_impulse: 14.0,
@@ -126,6 +128,25 @@ fn monster_aggro_system(
         if position.abs_diff_eq(player_position, MONSTER_AGGRO_DISTANCE) {
             // monster location.destination = player.location.position
             location.destination = Some(player_position);
+        }
+    }
+}
+
+/* A system that displays the events. */
+fn display_events(
+    mut commands: Commands,
+    mut collision_events: EventReader<CollisionEvent>,
+    mut ev_monster_hit: EventWriter<HitMonsterEvent>,
+) {
+    for collision_event in collision_events.iter() {
+        match collision_event {
+            CollisionEvent::Started(monster_entity, projectile_entity, _) => {
+                commands.entity(*projectile_entity).despawn_recursive();
+                ev_monster_hit.send(HitMonsterEvent(*monster_entity));
+            }
+            CollisionEvent::Stopped(_, _, _) => {
+                continue;
+            }
         }
     }
 }

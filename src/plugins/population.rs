@@ -198,7 +198,7 @@ fn add_creature(
             creature_type.size().x,
         ))
         .insert(Damping {
-            linear_damping: 0.5,
+            linear_damping: 50.,
             angular_damping: 0.,
         })
         .insert(Friction::coefficient(0.7))
@@ -208,6 +208,7 @@ fn add_creature(
     if is_player {
         ent.insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_2));
     } else {
+        ent.insert(ActiveEvents::COLLISION_EVENTS);
         ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_1));
         ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_2));
         ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_3));

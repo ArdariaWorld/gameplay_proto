@@ -64,8 +64,9 @@
 
 # 0.11
 ✔ right click part 1 => shoot arrow @started(22-10-13 20:08) @done(22-10-13 21:15) @lasted(1h7m18s)
-[] right click part 2 => arrow decrease monster hps and disapear
-
+✔ right click part 2 => arrow decrease monster hps and disapear @started(22-10-13 21:16) @done(22-10-13 21:50) @lasted(34m3s)
+[] despawn arrows after velocity is 0
+[] keep monster pushback when hit by arrow
 
 # Backlog
 [] place heal resources on the map

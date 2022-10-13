@@ -156,7 +156,7 @@ fn mouse_right_click_system(
                 cursor_position.y - win.requested_height() / 2.,
             );
 
-            let mouse_angle = Vec2::splat(1.).angle_between(centered_cursor_position);
+            let mouse_angle = Vec2::new(1., 0.).angle_between(centered_cursor_position);
 
             ev_fire_projectile.send(FireProjectileEvent(mouse_angle));
         };
@@ -209,7 +209,6 @@ fn mouse_left_click_system(
                 .expect("No collider position");
 
             position.rotation = Quat::from_rotation_z(mouse_angle);
-            println!("New rotation {}", position.rotation);
 
             let mut sprite_transform = sprite_range_query
                 .get_single_mut()
@@ -219,8 +218,6 @@ fn mouse_left_click_system(
             let transform = q_parent
                 .get(parent_entity.get())
                 .expect("No parent transform");
-
-            println!("Parent translation {}", transform.translation);
 
             // // TODO how to exclude more than 1 collider?
             let filter = QueryFilter::default()
