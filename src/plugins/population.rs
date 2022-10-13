@@ -83,6 +83,9 @@ pub struct Monster;
 pub struct Player;
 
 #[derive(Component, Inspectable)]
+pub struct PlayerSwordRangeSensor;
+
+#[derive(Component)]
 pub struct PlayerSwordRange;
 
 #[derive(Clone, Default, Debug)]
@@ -232,7 +235,7 @@ fn add_creature(
                         Quat::from_rotation_z(0.),
                     )))
                     .insert(Sensor)
-                    .insert(PlayerSwordRange);
+                    .insert(PlayerSwordRangeSensor);
             }
         })
         //
@@ -257,16 +260,17 @@ fn add_creature(
         })
         .with_children(|parent| {
             if is_player {
-                parent.spawn_bundle(SpriteSheetBundle {
-                    texture_atlas: texture_atlas_handle.clone(),
-                    transform: Transform {
-                        rotation: Quat::from_rotation_z(-2.3),
-                        scale: Vec3::splat(0.65),
-                        ..default()
-                    },
-                    sprite: TextureAtlasSprite::new(0),
-                    ..Default::default()
-                });
+                parent
+                    .spawn_bundle(SpriteSheetBundle {
+                        texture_atlas: texture_atlas_handle.clone(),
+                        transform: Transform {
+                            scale: Vec3::splat(0.65),
+                            ..default()
+                        },
+                        sprite: TextureAtlasSprite::new(0),
+                        ..Default::default()
+                    })
+                    .insert(PlayerSwordRange);
             }
         })
         //

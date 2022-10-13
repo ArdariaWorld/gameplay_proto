@@ -59,7 +59,8 @@
 ✔ refactorize all code with <?> operator @started(22-10-09 14:03) @done(22-10-09 14:18) @lasted(15m44s)
 ✔ move with WASD @started(22-10-09 14:20) @done(22-10-09 14:54) @lasted(34m55s)
 ✔ left click (part 1) => sword @started(22-10-09 14:54) @done(22-10-09 23:06) @lasted(8h12m6s)
-[] display sprite on left click with correct orientation
+✔ left click part 2 -> display sprite on left click with correct orientation @started(22-10-13 19:34) @done(22-10-13 19:54) @lasted(20m3s)
+[] left click part 3 - hit ennemies with collider zone instead of click @started(22-10-13 19:54)
 [] right click => arrow
 
 

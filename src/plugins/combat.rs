@@ -20,8 +20,8 @@ impl Plugin for CombatPlugin {
             .add_event::<KillMonsterEvent>()
             .add_system(monster_hit_system)
             .add_system(monster_aggro_system)
-            .add_system(monster_fight_system)
-            .add_system(test_intersections);
+            .add_system(monster_fight_system);
+        // .add_system(test_intersections);
     }
 }
 

@@ -1,7 +1,7 @@
 use super::{
     combat::HitMonsterEvent,
     location::Location,
-    population::{Creature, Monster, Player, PlayerSwordRange, Stats},
+    population::{Creature, Monster, Player, PlayerSwordRange, PlayerSwordRangeSensor, Stats},
 };
 use crate::{
     utils::{error::ErrorMessage, vec::RandVec2},
@@ -141,9 +141,17 @@ fn mouse_left_click_system(
     rapier_context: Res<RapierContext>,
     mut collider_query: Query<
         (&mut Transform, &Collider, Entity, &Parent),
-        (With<Collider>, With<PlayerSwordRange>),
+        (
+            With<Collider>,
+            With<PlayerSwordRangeSensor>,
+            Without<PlayerSwordRange>,
+        ),
     >,
-    q_parent: Query<&Transform, Without<PlayerSwordRange>>,
+    mut sprite_range_query: Query<
+        &mut Transform,
+        (With<PlayerSwordRange>, Without<PlayerSwordRangeSensor>),
+    >,
+    q_parent: Query<&Transform, (Without<PlayerSwordRangeSensor>, Without<PlayerSwordRange>)>,
 ) {
     let mut closure = || {
         for event in mouse_button_input_events.iter() {
@@ -173,6 +181,11 @@ fn mouse_left_click_system(
 
             position.rotation = Quat::from_rotation_z(mouse_angle);
             println!("New rotation {}", position.rotation);
+
+            let mut sprite_transform = sprite_range_query
+                .get_single_mut()
+                .expect("No sprite transform");
+            sprite_transform.rotation = Quat::from_rotation_z(mouse_angle);
 
             let transform = q_parent
                 .get(parent_entity.get())
