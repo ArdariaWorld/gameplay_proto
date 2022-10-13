@@ -17,3 +17,21 @@
 ## 0.2
 - monster fight back
 - monster aggro
+
+
+# Colliders groups
+- player - 1
+- monsters - 2
+- sword range - 3
+- projectile - 4
+
+## Interactions
+### Active
+player - monster
+monster - projectile
+monster - sword range
+monster - monster
+
+### Ignored
+player - projectile
+player - sword range

@@ -182,12 +182,12 @@ fn add_creature(
         _ => return,
     };
 
-    commands
-        .spawn_bundle(SpatialBundle {
-            transform: Transform::from_translation(RandVec2::new().extend(1.)),
-            ..default()
-        })
-        .insert(RigidBody::Dynamic)
+    let mut ent = commands.spawn_bundle(SpatialBundle {
+        transform: Transform::from_translation(RandVec2::new().extend(1.)),
+        ..default()
+    });
+
+    ent.insert(RigidBody::Dynamic)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity {
             linvel: Vec2::new(0., 0.),
@@ -203,92 +203,103 @@ fn add_creature(
         })
         .insert(Friction::coefficient(0.7))
         .insert(Restitution::coefficient(3.))
-        .insert(Dominance::group(dominance_group))
-        //
-        // Sword range collider
-        .with_children(|parent| {
-            if is_player {
-                let mut ent = parent.spawn();
-                ent.insert(convex_polyline)
-                    .insert_bundle(TransformBundle::from(Transform::from_rotation(
-                        Quat::from_rotation_z(0.),
-                    )))
-                    .insert(Sensor)
-                    .insert(PlayerSwordRangeSensor);
-            }
-        })
-        //
-        // Add Creature
-        .with_children(|parent| {
-            let mut ent = parent.spawn_bundle(CreatureBundle::new(
-                creature_type.clone(),
-                "Jbb".to_string(),
-                100.0,
-                creature_type.attack(),
-            ));
+        .insert(Dominance::group(dominance_group));
 
-            if is_player {
-                ent.insert(Player);
-            } else {
-                ent.insert(Monster);
-                ent.insert(LastAttack(Timer::from_seconds(
-                    MONSTER_ATTACK_COOLDOWN,
-                    false,
-                )));
-            }
-        })
-        .with_children(|parent| {
-            if is_player {
-                parent
-                    .spawn_bundle(SpriteSheetBundle {
-                        texture_atlas: texture_atlas_handle.clone(),
-                        transform: Transform {
-                            scale: Vec3::splat(0.65),
-                            ..default()
-                        },
-                        sprite: TextureAtlasSprite::new(0),
-                        ..Default::default()
-                    })
-                    .insert(PlayerSwordRange);
-            }
-        })
-        //
-        // Add Sprite
-        .with_children(|parent| {
-            parent.spawn_bundle(SpriteBundle {
+    if is_player {
+        ent.insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_2));
+    } else {
+        ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_1));
+        ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_2));
+        ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_3));
+        ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_4));
+    }
+
+    //
+    // Sword range collider
+    ent.with_children(|parent| {
+        if is_player {
+            let mut ent = parent.spawn();
+            ent.insert(convex_polyline)
+                .insert_bundle(TransformBundle::from(Transform::from_rotation(
+                    Quat::from_rotation_z(0.),
+                )))
+                .insert(Sensor)
+                .insert(PlayerSwordRangeSensor)
+                .insert(CollisionGroups::new(Group::GROUP_3, Group::GROUP_2));
+        }
+    })
+    //
+    // Add Creature
+    .with_children(|parent| {
+        let mut ent = parent.spawn_bundle(CreatureBundle::new(
+            creature_type.clone(),
+            "Jbb".to_string(),
+            100.0,
+            creature_type.attack(),
+        ));
+
+        if is_player {
+            ent.insert(Player);
+        } else {
+            ent.insert(Monster);
+            ent.insert(LastAttack(Timer::from_seconds(
+                MONSTER_ATTACK_COOLDOWN,
+                false,
+            )));
+        }
+    })
+    .with_children(|parent| {
+        if is_player {
+            parent
+                .spawn_bundle(SpriteSheetBundle {
+                    texture_atlas: texture_atlas_handle.clone(),
+                    transform: Transform {
+                        scale: Vec3::splat(0.65),
+                        ..default()
+                    },
+                    sprite: TextureAtlasSprite::new(0),
+                    ..Default::default()
+                })
+                .insert(PlayerSwordRange);
+        }
+    })
+    //
+    // Add Sprite
+    .with_children(|parent| {
+        parent.spawn_bundle(SpriteBundle {
+            transform: Transform {
+                translation: Vec3::new(0., creature_type.size().y / 2., -1.1),
+                ..default()
+            },
+            sprite: Sprite {
+                color: creature_type.color(),
+                custom_size: Some(creature_type.size().truncate() * 2.),
+                ..default()
+            },
+            ..default()
+        });
+    })
+    //
+    // Add Text
+    .with_children(|parent| {
+        parent
+            .spawn_bundle(Text2dBundle {
+                text: Text::from_section(
+                    100.0.to_string(),
+                    TextStyle {
+                        font_size: 40.0,
+                        color: Color::rgb(1., 1., 1.0),
+                        font: asset_server.load("fonts/FiraCode-Bold.ttf"),
+                    },
+                ),
                 transform: Transform {
-                    translation: Vec3::new(0., creature_type.size().y / 2., -1.1),
-                    ..default()
-                },
-                sprite: Sprite {
-                    color: creature_type.color(),
-                    custom_size: Some(creature_type.size().truncate() * 2.),
+                    translation: Vec3::new(-25., 60., -20.),
                     ..default()
                 },
                 ..default()
-            });
-        })
-        //
-        // Add Text
-        .with_children(|parent| {
-            parent
-                .spawn_bundle(Text2dBundle {
-                    text: Text::from_section(
-                        100.0.to_string(),
-                        TextStyle {
-                            font_size: 40.0,
-                            color: Color::rgb(1., 1., 1.0),
-                            font: asset_server.load("fonts/FiraCode-Bold.ttf"),
-                        },
-                    ),
-                    transform: Transform {
-                        translation: Vec3::new(-25., 60., -20.),
-                        ..default()
-                    },
-                    ..default()
-                })
-                .insert(HpsDisplay);
-        });
+            })
+            .insert(HpsDisplay);
+    });
 }
 
 fn get_child_hps(

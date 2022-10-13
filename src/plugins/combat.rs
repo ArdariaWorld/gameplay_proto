@@ -2,6 +2,12 @@ use crate::{MONSTER_AGGRO_DISTANCE, MONSTER_MAX_RANGE};
 
 use super::{location::*, player::KillPlayerEvent, population::*};
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
+
+#[derive(Component, Default)]
+pub struct Projectile;
+pub struct FireProjectileEvent(pub f32);
+pub struct ProjectileHitEvent(pub Entity, pub Entity);
 
 pub struct HitMonsterEvent(pub Entity);
 pub struct KillMonsterEvent(pub Entity);
@@ -15,11 +21,45 @@ pub struct CombatPlugin;
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(MonstersKilled { count: 0 })
+            .add_event::<FireProjectileEvent>()
             .add_event::<HitMonsterEvent>()
             .add_event::<KillMonsterEvent>()
             .add_system(monster_hit_system)
             .add_system(monster_aggro_system)
-            .add_system(monster_fight_system);
+            .add_system(monster_fight_system)
+            .add_system(fire_projectile_system);
+    }
+}
+
+fn fire_projectile_system(
+    mut commands: Commands,
+    mut ev_fire_projectile: EventReader<FireProjectileEvent>,
+    player_query: Query<&Parent, With<Player>>,
+    q_parent: Query<&Transform>,
+) {
+    let parent_entity = player_query.get_single().expect("No Player found");
+    let transform = q_parent
+        .get(parent_entity.get())
+        .expect("No parent transform");
+
+    for ev in ev_fire_projectile.iter() {
+        commands
+            .spawn()
+            .insert_bundle(TransformBundle::from(Transform::from_translation(
+                transform.translation,
+            )))
+            .insert(RigidBody::Dynamic)
+            .insert(LockedAxes::ROTATION_LOCKED)
+            .insert(Velocity::zero())
+            .insert(Collider::cuboid(20., 10.))
+            .insert(Friction::coefficient(0.7))
+            .insert(Restitution::coefficient(5.))
+            .insert(Dominance::group(2))
+            .insert(ExternalImpulse {
+                impulse: Vec2::from_angle(ev.0) * 50.,
+                torque_impulse: 14.0,
+            })
+            .insert(CollisionGroups::new(Group::GROUP_4, Group::GROUP_2));
     }
 }
 
