@@ -106,7 +106,8 @@ fn wasd_movement(
             velocity_vector.y = -1.;
         }
 
-        velocity.linvel = velocity_vector * 150.;
+        velocity.linvel = velocity_vector * 10.;
+        // println!("Linear velocity is {:?}", velocity.linvel);
         Ok::<(), ErrorMessage>(())
     };
 

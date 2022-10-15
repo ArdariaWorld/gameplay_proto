@@ -1,6 +1,6 @@
 use crate::{
     utils::vec::RandVec2, GameState, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
-    MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE,
+    MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE, PIXEL_PER_METER,
 };
 
 use super::location::Location;
@@ -103,8 +103,8 @@ impl CreatureType {
 
     pub fn size(&self) -> Vec3 {
         match self {
-            CreatureType::Human => Vec2::new(17.0, 40.0).extend(2.0),
-            CreatureType::Monster => Vec2::new(25.0, 35.0).extend(1.0),
+            CreatureType::Human => Vec2::new(0.9, 1.8).extend(2.0),
+            CreatureType::Monster => Vec2::new(1.2, 2.5).extend(1.0),
         }
     }
 
@@ -136,6 +136,8 @@ fn spawn_creatures(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) -> () {
     add_creature(&mut commands, &mut asset_server, &mut texture_atlases, true);
+
+    return;
 
     for _ in 0..10 {
         add_creature(
@@ -188,20 +190,24 @@ fn add_creature(
     });
 
     ent.insert(RigidBody::Dynamic)
+        .insert_bundle(TransformBundle::from(Transform::from_scale(Vec3::splat(
+            1.,
+        ))))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity {
             linvel: Vec2::new(0., 0.),
             angvel: 0.,
         })
         .insert(Collider::cuboid(
-            creature_type.size().x,
-            creature_type.size().x,
+            creature_type.size().x / 2.,
+            creature_type.size().y / 2.,
         ))
-        .insert(Damping {
-            linear_damping: 50.,
-            angular_damping: 0.,
-        })
-        .insert(Friction::coefficient(0.7))
+        .insert(ColliderMassProperties::Density(1000.0))
+        // .insert(Damping {
+        // linear_damping: 50.,
+        // angular_damping: 0.,
+        // })
+        // .insert(Friction::coefficient(0.7))
         .insert(Restitution::coefficient(3.))
         .insert(Dominance::group(dominance_group));
 
@@ -266,20 +272,20 @@ fn add_creature(
     })
     //
     // Add Sprite
-    .with_children(|parent| {
-        parent.spawn_bundle(SpriteBundle {
-            transform: Transform {
-                translation: Vec3::new(0., creature_type.size().y / 2., -1.1),
-                ..default()
-            },
-            sprite: Sprite {
-                color: creature_type.color(),
-                custom_size: Some(creature_type.size().truncate() * 2.),
-                ..default()
-            },
-            ..default()
-        });
-    })
+    // .with_children(|parent| {
+    //     parent.spawn_bundle(SpriteBundle {
+    //         transform: Transform {
+    //             translation: Vec3::new(0., creature_type.size().y / 2., -1.1),
+    //             ..default()
+    //         },
+    //         sprite: Sprite {
+    //             color: creature_type.color(),
+    //             custom_size: Some(creature_type.size().truncate() * PIXEL_PER_METER),
+    //             ..default()
+    //         },
+    //         ..default()
+    //     });
+    // })
     //
     // Add Text
     .with_children(|parent| {

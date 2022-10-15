@@ -50,7 +50,7 @@ fn fire_projectile_system(
                 transform.translation,
             )))
             .insert(RigidBody::Dynamic)
-            .insert(LockedAxes::ROTATION_LOCKED)
+            // .insert(LockedAxes::ROTATION_LOCKED)
             .insert(Velocity::zero())
             .insert(Collider::cuboid(20., 10.))
             .insert(Friction::coefficient(0.7))
@@ -58,7 +58,7 @@ fn fire_projectile_system(
             .insert(Dominance::group(2))
             .insert(Projectile)
             .insert(ExternalImpulse {
-                impulse: Vec2::from_angle(ev.0) * 50.,
+                impulse: Vec2::from_angle(ev.0) * 20.,
                 torque_impulse: 14.0,
             })
             .insert(CollisionGroups::new(Group::GROUP_4, Group::GROUP_2));

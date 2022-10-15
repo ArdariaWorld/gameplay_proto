@@ -30,7 +30,9 @@ pub const MONSTER_AGGRO_DISTANCE: f32 = 200.;
 
 pub const WORLD_WIDTH: f32 = 800.0;
 pub const WORLD_HEIGHT: f32 = 400.0;
-pub const WALL_COLOR: Color = Color::rgb(0.8, 0.4, 0.2);
+pub const WALL_COLOR: Color = Color::BLUE;
+
+pub const PIXEL_PER_METER: f32 = 50.;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {
@@ -44,12 +46,26 @@ pub struct Game {
     world_bundle: WorldMapBundle,
 }
 
+fn setup_rapier(mut rapier_config: ResMut<RapierConfiguration>) {
+    // Set gravity to x and spawn camera.
+    //rapier_config.gravity = Vector2::zeros();
+    rapier_config.gravity = Vec2::new(0.0, 0.0);
+}
+
 fn main() {
     App::new()
+        .insert_resource(WindowDescriptor {
+            title: "Ardaria Server Prototype".to_string(),
+            width: 1920.,
+            height: 1080.,
+            ..default()
+        })
         .init_resource::<Game>()
         .add_plugins(DefaultPlugins)
         .add_plugin(WorldInspectorPlugin::new())
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
+            PIXEL_PER_METER,
+        ))
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_state(GameState::Playing)
         .add_plugin(CombatPlugin)
@@ -59,6 +75,7 @@ fn main() {
         .add_plugin(LocationPlugin)
         .add_plugin(HudPlugin)
         .add_system(camera_follow_player)
+        .add_startup_system(setup_rapier)
         .add_startup_system(init_world_map)
         .add_system(bevy::window::close_on_esc)
         .run();

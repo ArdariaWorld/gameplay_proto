@@ -65,6 +65,14 @@
 # 0.11
 ✔ right click part 1 => shoot arrow @started(22-10-13 20:08) @done(22-10-13 21:15) @lasted(1h7m18s)
 ✔ right click part 2 => arrow decrease monster hps and disapear @started(22-10-13 21:16) @done(22-10-13 21:50) @lasted(34m3s)
+
+# 0.12
+✔ fix gravity @started(22-10-15 17:14) @done(22-10-15 19:31) @lasted(2h17m5s)
+✔ fix speed @done(22-10-15 19:31)
+[] fix zIndex
+[] fix projectile rotation
+[] add projectile sprite
+[] fix monsters / human collisions
 [] despawn arrows after velocity is 0
 [] keep monster pushback when hit by arrow
 
