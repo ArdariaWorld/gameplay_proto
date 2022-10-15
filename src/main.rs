@@ -17,7 +17,7 @@ use plugins::{
 use bevy_rapier2d::prelude::*;
 
 pub const HUMAN_STEP_DISTANCE: f32 = 150.;
-pub const MONSTER_STEP_DISTANCE: f32 = 100.;
+pub const MONSTER_STEP_DISTANCE: f32 = 5.;
 
 pub const HUMAN_MAX_RANGE: f32 = 3.;
 pub const MONSTER_MAX_RANGE: f32 = 170.;

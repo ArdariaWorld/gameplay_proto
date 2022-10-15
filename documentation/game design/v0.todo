@@ -71,7 +71,7 @@
 ✔ fix speed @done(22-10-15 19:31)
 ✔ fix sprite display @started(22-10-15 21:00) @done(22-10-15 21:45) @lasted(45m18s)
 ✔ fix zIndex @done(22-10-15 21:45)
-[] fix monster movement
+✔ fix monster movement @started(22-10-15 21:46) @done(22-10-15 21:48) @lasted(2m21s)
 [] fix projectile rotation
 [] add projectile sprite
 [] fix monsters / human collisions
