@@ -19,7 +19,7 @@ use bevy_rapier2d::prelude::*;
 pub const HUMAN_STEP_DISTANCE: f32 = 150.;
 pub const MONSTER_STEP_DISTANCE: f32 = 100.;
 
-pub const HUMAN_MAX_RANGE: f32 = 200.;
+pub const HUMAN_MAX_RANGE: f32 = 3.;
 pub const MONSTER_MAX_RANGE: f32 = 170.;
 
 pub const HUMAN_ATK: f32 = 20.;
@@ -33,6 +33,7 @@ pub const WORLD_HEIGHT: f32 = 400.0;
 pub const WALL_COLOR: Color = Color::BLUE;
 
 pub const PIXEL_PER_METER: f32 = 50.;
+pub const PIXEL_SCALE: f32 = 1. / 50.;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {

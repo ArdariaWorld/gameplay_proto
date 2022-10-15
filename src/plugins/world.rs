@@ -42,7 +42,7 @@ pub fn init_world_map(
         },
         sprite_sheet_bundle: SpriteSheetBundle {
             texture_atlas: texture_atlas_handle.clone(),
-            transform: Transform::from_scale(Vec3::splat(1. / PIXEL_PER_METER)),
+            transform: Transform::from_scale(Vec2::splat(1. / PIXEL_PER_METER).extend(1.)),
             sprite: TextureAtlasSprite::new(0),
             ..default()
         }, // SpriteBundle {

@@ -1,6 +1,7 @@
 use crate::{
     utils::vec::RandVec2, GameState, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
     MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE, PIXEL_PER_METER,
+    PIXEL_SCALE,
 };
 
 use super::location::Location;
@@ -137,8 +138,6 @@ fn spawn_creatures(
 ) -> () {
     add_creature(&mut commands, &mut asset_server, &mut texture_atlases, true);
 
-    return;
-
     for _ in 0..10 {
         add_creature(
             &mut commands,
@@ -166,12 +165,12 @@ fn add_creature(
     };
 
     let convex_polyline_opt = Collider::convex_polyline(Vec::from([
-        Vect::new(0., 0.) * 100.,
-        Vect::new(0., 1.) * 100.,
-        Vect::new(0.5, 0.866) * 100.,
-        Vect::new(0.707, 0.707) * 100.,
-        Vect::new(0.866, 0.5) * 100.,
-        Vect::new(1., 0.) * 100.,
+        Vect::new(0., 0.) * HUMAN_MAX_RANGE,
+        Vect::new(0., 1.) * HUMAN_MAX_RANGE,
+        Vect::new(0.5, 0.866) * HUMAN_MAX_RANGE,
+        Vect::new(0.707, 0.707) * HUMAN_MAX_RANGE,
+        Vect::new(0.866, 0.5) * HUMAN_MAX_RANGE,
+        Vect::new(1., 0.) * HUMAN_MAX_RANGE,
     ]));
 
     // Setup the sprite sheet
@@ -185,14 +184,14 @@ fn add_creature(
     };
 
     let mut ent = commands.spawn_bundle(SpatialBundle {
-        transform: Transform::from_translation(RandVec2::new().extend(1.)),
+        transform: Transform::from_xyz(0., 0., 2.),
         ..default()
     });
 
     ent.insert(RigidBody::Dynamic)
-        .insert_bundle(TransformBundle::from(Transform::from_scale(Vec3::splat(
-            1.,
-        ))))
+        .insert_bundle(TransformBundle::from_transform(
+            Transform::from_translation(RandVec2::new().extend(2.)),
+        ))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity {
             linvel: Vec2::new(0., 0.),
@@ -255,13 +254,15 @@ fn add_creature(
             )));
         }
     })
+    //
+    //Sword range
     .with_children(|parent| {
         if is_player {
             parent
                 .spawn_bundle(SpriteSheetBundle {
                     texture_atlas: texture_atlas_handle.clone(),
                     transform: Transform {
-                        scale: Vec3::splat(0.65),
+                        scale: Vec2::splat(1. / PIXEL_PER_METER).extend(1.),
                         ..default()
                     },
                     sprite: TextureAtlasSprite::new(0),
@@ -272,20 +273,19 @@ fn add_creature(
     })
     //
     // Add Sprite
-    // .with_children(|parent| {
-    //     parent.spawn_bundle(SpriteBundle {
-    //         transform: Transform {
-    //             translation: Vec3::new(0., creature_type.size().y / 2., -1.1),
-    //             ..default()
-    //         },
-    //         sprite: Sprite {
-    //             color: creature_type.color(),
-    //             custom_size: Some(creature_type.size().truncate() * PIXEL_PER_METER),
-    //             ..default()
-    //         },
-    //         ..default()
-    //     });
-    // })
+    .with_children(|parent| {
+        parent.spawn_bundle(SpriteBundle {
+            transform: Transform {
+                scale: Vec3::new(creature_type.size().x, creature_type.size().y, 1.),
+                ..default()
+            },
+            sprite: Sprite {
+                color: creature_type.color(),
+                ..default()
+            },
+            ..default()
+        });
+    })
     //
     // Add Text
     .with_children(|parent| {
@@ -295,12 +295,17 @@ fn add_creature(
                     100.0.to_string(),
                     TextStyle {
                         font_size: 40.0,
-                        color: Color::rgb(1., 1., 1.0),
+                        color: Color::WHITE,
                         font: asset_server.load("fonts/FiraCode-Bold.ttf"),
                     },
                 ),
                 transform: Transform {
-                    translation: Vec3::new(-25., 60., -20.),
+                    translation: Vec3::new(
+                        -creature_type.size().x / 2. - 0.1,
+                        creature_type.size().y,
+                        0.,
+                    ),
+                    scale: Vec2::splat(PIXEL_SCALE).extend(1.),
                     ..default()
                 },
                 ..default()
