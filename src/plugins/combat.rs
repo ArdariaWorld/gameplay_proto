@@ -37,8 +37,6 @@ fn print_projectile_stats(mut q_projectile: Query<&mut Velocity, With<Projectile
     for mut velocity in q_projectile.iter_mut() {
         if velocity.linvel.length() <= 1. {
             velocity.linvel = Vec2::default();
-        } else {
-            println!("Velocity is: {:?}", velocity);
         }
     }
 }
@@ -56,11 +54,16 @@ fn fire_projectile_system(
 
     for ev in ev_fire_projectile.iter() {
         commands
-            .spawn()
-            .insert_bundle(TransformBundle::from(Transform::from_translation(
-                transform.translation,
-            )))
+            .spawn_bundle(SpatialBundle {
+                transform: Transform::from_xyz(0., 0., 2.),
+                ..default()
+            })
             .insert(RigidBody::Dynamic)
+            .insert_bundle(TransformBundle::from(Transform {
+                translation: transform.translation,
+                rotation: Quat::from_rotation_z(ev.0),
+                ..default()
+            }))
             .insert(LockedAxes::ROTATION_LOCKED)
             .insert(Collider::cuboid(0.2, 0.60))
             .insert(Velocity::default())
@@ -81,7 +84,7 @@ fn fire_projectile_system(
             .with_children(|parent| {
                 parent.spawn_bundle(SpriteBundle {
                     transform: Transform {
-                        scale: Vec3::new(0.5, 1., 1.),
+                        scale: Vec3::new(1.2, 0.2, 1.),
                         ..default()
                     },
                     sprite: Sprite {

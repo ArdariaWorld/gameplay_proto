@@ -75,11 +75,12 @@
 ✔ fix monsters / human collisions @started(22-10-15 21:48) @done(22-10-16 16:52) @lasted(19h4m26s)
 ✔ fix projectile size and velocity @started(22-10-15 22:19) @done(22-10-16 17:50) @lasted(19h31m40s)
 ✔ stop arrows once velocity is <1 @done(22-10-16 17:51)
-[] add projectile sprite
-[] fix mouse angle bug when resize window
+✔ add projectile sprite @started(22-10-16 17:52) @done(22-10-16 17:55) @lasted(3m22s)
+✔ fix projectile rotation @started(22-10-16 17:55) @done(22-10-16 18:00) @lasted(5m52s)
 [] keep monster pushback when hit by arrow
 
 # Backlog
+[] fix mouse angle bug when resize window
 [] place heal resources on the map
 [] collecting resources heals player
 [] respawn monsters
