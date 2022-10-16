@@ -232,7 +232,7 @@ fn mouse_left_click_system(
                 &collider,
                 filter,
                 |entity| {
-                    ev_monster_hit.send(HitMonsterEvent(entity));
+                    ev_monster_hit.send(HitMonsterEvent(entity, mouse_angle));
                     // println!("The entity {:?} intersects our shape.", entity);
                     true // Return `false` instead if we want to stop searching for other colliders that contain this point.
                 },
@@ -312,7 +312,7 @@ fn mouse_click_system(
                 // If monster is close enough from player, we hit
                 if player_position.abs_diff_eq(monster_position, HUMAN_MAX_RANGE) {
                     println!("Hit monster !");
-                    ev_monster_hit.send(HitMonsterEvent(parent.get()));
+                    // ev_monster_hit.send(HitMonsterEvent(parent.get()));
                     return Ok(());
                 }
             }

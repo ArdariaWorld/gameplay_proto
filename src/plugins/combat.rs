@@ -1,4 +1,7 @@
-use crate::{MONSTER_AGGRO_DISTANCE, MONSTER_MAX_RANGE, PIXEL_PER_METER, PROJECTILE_IMPULSE};
+use crate::{
+    MONSTER_AGGRO_DISTANCE, MONSTER_HIT_IMPULSE, MONSTER_MAX_RANGE, PIXEL_PER_METER,
+    PROJECTILE_IMPULSE,
+};
 
 use super::{location::*, player::KillPlayerEvent, population::*};
 use bevy::prelude::*;
@@ -9,7 +12,7 @@ pub struct Projectile;
 pub struct FireProjectileEvent(pub f32);
 pub struct ProjectileHitEvent(pub Entity, pub Entity);
 
-pub struct HitMonsterEvent(pub Entity);
+pub struct HitMonsterEvent(pub Entity, pub f32);
 pub struct KillMonsterEvent(pub Entity);
 
 #[derive(Default)]
@@ -53,6 +56,7 @@ fn fire_projectile_system(
         .expect("No parent transform");
 
     for ev in ev_fire_projectile.iter() {
+        println!("Applied projectile rotation and impulse {:?}", ev.0);
         commands
             .spawn_bundle(SpatialBundle {
                 transform: Transform::from_xyz(0., 0., 2.),
@@ -65,14 +69,15 @@ fn fire_projectile_system(
                 ..default()
             }))
             .insert(LockedAxes::ROTATION_LOCKED)
-            .insert(Collider::cuboid(0.2, 0.60))
+            .insert(Collider::cuboid(1.2 / 2., 0.2 / 2.))
             .insert(Velocity::default())
             .insert(Damping {
                 linear_damping: 1.,
                 ..default()
             })
-            .insert(Restitution::coefficient(5.))
+            .insert(Restitution::coefficient(50.))
             .insert(Dominance::group(2))
+            .insert(ActiveEvents::COLLISION_EVENTS) // Enable events to detect projectile events
             .insert(Projectile)
             .insert(ExternalImpulse {
                 impulse: Vec2::from_angle(ev.0).normalize() / PIXEL_PER_METER * PROJECTILE_IMPULSE,
@@ -101,7 +106,11 @@ fn fire_projectile_system(
 fn monster_hit_system(
     mut commands: Commands,
     mut entity_query: Query<(Entity, &Children)>,
-    mut monsters_query: Query<&mut Stats, Without<Player>>,
+    mut monsters_query: Query<
+        (&Parent, &mut Stats, &mut BrainState),
+        (With<Monster>, Without<Player>),
+    >,
+    mut q_monster_parent: Query<&mut ExternalImpulse, With<Collider>>,
     player_query: Query<&Stats, With<Player>>,
     mut ev_hit_monster: EventReader<HitMonsterEvent>,
     mut ev_kill_monster: EventWriter<KillMonsterEvent>,
@@ -113,6 +122,8 @@ fn monster_hit_system(
     };
 
     for ev in ev_hit_monster.iter() {
+        println!("event hit monster");
+
         let (entity, children) = match entity_query.get_mut(ev.0) {
             Ok(result) => result,
             Err(e) => {
@@ -123,11 +134,26 @@ fn monster_hit_system(
 
         for &child in children.iter() {
             match monsters_query.get_mut(child) {
-                Ok(mut stats) => {
+                Ok((parent, mut stats, mut brain_state)) => {
+                    let mut external_impulse = q_monster_parent
+                        .get_mut(parent.get())
+                        .expect("No creature external impulse");
+
+                    println!(
+                        "Applied impulse vector {:?}",
+                        Vec2::from_angle(ev.1).normalize()
+                    );
+
+                    external_impulse.impulse =
+                        Vec2::from_angle(ev.1).normalize() * MONSTER_HIT_IMPULSE;
                     stats.hp -= player_stats.atk;
+
+                    brain_state.conscious = ConsciousnessStateEnum::Stun;
+                    brain_state.stun_at.reset();
 
                     if stats.hp <= 0. {
                         ev_kill_monster.send(KillMonsterEvent(entity));
+                        brain_state.conscious = ConsciousnessStateEnum::Ko;
                         commands.entity(entity).despawn_recursive();
                     }
                 }
@@ -165,17 +191,40 @@ fn monster_aggro_system(
     }
 }
 
-/* A system that displays the events. */
 fn projectile_collision_system(
     mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
     mut ev_monster_hit: EventWriter<HitMonsterEvent>,
+    q_projectile: Query<&Transform, With<Projectile>>,
 ) {
     for collision_event in collision_events.iter() {
         match collision_event {
-            CollisionEvent::Started(monster_entity, projectile_entity, _) => {
-                // commands.entity(*projectile_entity).despawn_recursive();
-                ev_monster_hit.send(HitMonsterEvent(*monster_entity));
+            CollisionEvent::Started(entity_1_ref, entity_2_ref, _) => {
+                let entity_1 = commands.entity(*entity_1_ref).id();
+                let entity_2 = commands.entity(*entity_2_ref).id();
+
+                let (projectile_entity, monster_entity) = match q_projectile.get(entity_1) {
+                    Ok(_) => (entity_1, entity_2),
+                    Err(_) => match q_projectile.get(entity_2) {
+                        Ok(_) => (entity_2, entity_1),
+                        Err(_) => continue, // If no projectile, continue events iteration
+                    },
+                };
+
+                let projectile_transform =
+                    q_projectile.get(projectile_entity).expect("No projectile");
+
+                println!(
+                    "Projectile rotation {:?}",
+                    projectile_transform.rotation.to_axis_angle()
+                );
+
+                ev_monster_hit.send(HitMonsterEvent(
+                    monster_entity,
+                    projectile_transform.rotation.to_axis_angle().1,
+                ));
+
+                commands.entity(projectile_entity).despawn_recursive();
             }
             CollisionEvent::Stopped(_, _, _) => {
                 continue;

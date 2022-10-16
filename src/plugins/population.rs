@@ -1,7 +1,7 @@
 use crate::{
     utils::vec::RandVec2, GameState, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
-    MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE, PIXEL_PER_METER,
-    PIXEL_SCALE,
+    MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE, MONSTER_STUN_COOLDOWN,
+    PIXEL_PER_METER, PIXEL_SCALE,
 };
 
 use super::location::Location;
@@ -14,21 +14,7 @@ impl Plugin for PopulationPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_creatures)
             .add_system(display_hps_system)
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(display_events));
-    }
-}
-
-/* A system that displays the events. */
-fn display_events(
-    mut collision_events: EventReader<CollisionEvent>,
-    mut contact_force_events: EventReader<ContactForceEvent>,
-) {
-    for collision_event in collision_events.iter() {
-        println!("Received collision event: {:?}", collision_event);
-    }
-
-    for contact_force_event in contact_force_events.iter() {
-        println!("Received contact force event: {:?}", contact_force_event);
+            .add_system(change_consciousness_system);
     }
 }
 
@@ -42,6 +28,12 @@ pub struct LastAttack(pub Timer);
 pub struct Stats {
     pub hp: f32,
     pub atk: f32,
+}
+
+#[derive(Component, Default)]
+pub struct BrainState {
+    pub conscious: ConsciousnessStateEnum,
+    pub stun_at: Timer,
 }
 
 #[derive(Component, Default)]
@@ -59,7 +51,22 @@ pub struct CreatureBundle {
     pub stats: Stats,
     pub name: Name,
     pub location: Location,
+    pub brain: BrainState,
 }
+
+#[derive(Clone, Default, Debug, Component, PartialEq)]
+pub enum ConsciousnessStateEnum {
+    #[default]
+    Awake,
+    Stun,
+    Ko,
+    Asleep,
+    Super,
+    Dead,
+}
+
+#[derive(Component, Default)]
+pub struct ConsciousnessState(pub ConsciousnessStateEnum);
 
 impl CreatureBundle {
     fn new(creature_type: CreatureType, name_str: String, hp: f32, atk: f32) -> CreatureBundle {
@@ -68,6 +75,10 @@ impl CreatureBundle {
             stats: Stats { hp, atk },
             name: Name(name_str),
             location: Location::new(),
+            brain: BrainState {
+                conscious: ConsciousnessStateEnum::Awake,
+                stun_at: Timer::from_seconds(MONSTER_STUN_COOLDOWN, false),
+            },
         }
     }
 }
@@ -138,7 +149,6 @@ fn spawn_creatures(
 ) -> () {
     add_creature(&mut commands, &mut asset_server, &mut texture_atlases, true);
 
-    return;
     for _ in 0..10 {
         add_creature(
             &mut commands,
@@ -202,13 +212,17 @@ fn add_creature(
             creature_type.size().x / 2.,
             creature_type.size().y / 2.,
         ))
-        .insert(ColliderMassProperties::Density(1000.0))
+        .insert(ColliderMassProperties::Density(2000.0))
         // .insert(Damping {
         // linear_damping: 50.,
         // angular_damping: 0.,
         // })
-        // .insert(Friction::coefficient(0.7))
-        .insert(Restitution::coefficient(3.))
+        .insert(Damping {
+            linear_damping: 1.,
+            ..default()
+        })
+        // .insert(Restitution::coefficient(3.))
+        .insert(ExternalImpulse::default())
         .insert(Dominance::group(dominance_group));
 
     if is_player {
@@ -345,6 +359,17 @@ fn display_hps_system(
                     Err(_) => (),
                 };
             }
+        }
+    }
+}
+
+fn change_consciousness_system(
+    time: Res<Time>,
+    mut creatures_q: Query<&mut BrainState, With<Monster>>,
+) {
+    for mut creature_brain_state in creatures_q.iter_mut() {
+        if creature_brain_state.stun_at.tick(time.delta()).finished() {
+            creature_brain_state.conscious = ConsciousnessStateEnum::Awake;
         }
     }
 }

@@ -25,8 +25,10 @@ pub const MONSTER_MAX_RANGE: f32 = 3.;
 pub const HUMAN_ATK: f32 = 20.;
 pub const MONSTER_ATK: f32 = 7.;
 pub const PROJECTILE_IMPULSE: f32 = 0.9;
+pub const MONSTER_HIT_IMPULSE: f32 = 20.;
 
 pub const MONSTER_ATTACK_COOLDOWN: f32 = 2.;
+pub const MONSTER_STUN_COOLDOWN: f32 = 2.;
 pub const MONSTER_AGGRO_DISTANCE: f32 = 16.;
 
 pub const WORLD_WIDTH: f32 = 800.0;

@@ -3,7 +3,7 @@ use bevy_rapier2d::prelude::Velocity;
 
 use crate::utils::error::ErrorMessage;
 
-use super::population::{Creature, Monster, Player};
+use super::population::{BrainState, ConsciousnessStateEnum, Creature, Monster, Player};
 
 #[derive(Default, Component, Debug)]
 pub struct Location {
@@ -26,16 +26,17 @@ impl Plugin for LocationPlugin {
     }
 }
 
+// Move non player creatures
 fn location_system(
     time: Res<Time>,
     mut creatures_query: Query<
-        (&Parent, &mut Location, &Creature),
+        (&Parent, &mut Location, &BrainState, &Creature),
         (With<Monster>, Without<Player>),
     >,
     mut q_parent: Query<(&Transform, &mut Velocity)>,
 ) {
     let mut closure = || {
-        for (parent_entity, mut location, creature) in creatures_query.iter_mut() {
+        for (parent_entity, mut location, brain_state, creature) in creatures_query.iter_mut() {
             // Get entity position
             let (translation, mut velocity) = q_parent.get_mut(parent_entity.get())?;
 
@@ -48,7 +49,6 @@ fn location_system(
                 if destination
                     .abs_diff_eq(creature_position, creature.0.speed() * time.delta_seconds())
                 {
-                    println!("1. Setting vel to 0");
                     location.destination = None;
                     velocity.linvel = Vec2::new(0., 0.);
                     return Ok(());
@@ -56,10 +56,10 @@ fn location_system(
 
                 // Get normalized vector to destination
                 let direction = (destination - creature_position).normalize();
-                println!("2. Setting vel to {:?}", direction * creature.0.speed());
-                velocity.linvel = direction * creature.0.speed();
+                if brain_state.conscious == ConsciousnessStateEnum::Awake {
+                    velocity.linvel = direction * creature.0.speed();
+                }
             } else {
-                println!("Setting vel to 0");
                 velocity.linvel = Vec2::new(0., 0.);
             }
         }

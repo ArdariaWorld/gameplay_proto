@@ -77,9 +77,10 @@
 ✔ stop arrows once velocity is <1 @done(22-10-16 17:51)
 ✔ add projectile sprite @started(22-10-16 17:52) @done(22-10-16 17:55) @lasted(3m22s)
 ✔ fix projectile rotation @started(22-10-16 17:55) @done(22-10-16 18:00) @lasted(5m52s)
-[] keep monster pushback when hit by arrow
+✔ keep monster pushback when hit by arrow @started(22-10-16 18:01) @done(22-10-16 20:36) @lasted(2h35m3s)
 
 # Backlog
+[] split code in smaller modules
 [] fix mouse angle bug when resize window
 [] place heal resources on the map
 [] collecting resources heals player
