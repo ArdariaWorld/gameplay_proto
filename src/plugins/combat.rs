@@ -1,4 +1,4 @@
-use crate::{MONSTER_AGGRO_DISTANCE, MONSTER_MAX_RANGE};
+use crate::{MONSTER_AGGRO_DISTANCE, MONSTER_MAX_RANGE, PIXEL_PER_METER};
 
 use super::{location::*, player::KillPlayerEvent, population::*};
 use bevy::prelude::*;
@@ -28,7 +28,7 @@ impl Plugin for CombatPlugin {
             .add_system(monster_aggro_system)
             .add_system(monster_fight_system)
             .add_system(fire_projectile_system)
-            .add_system(display_events);
+            .add_system(projectile_collision_system);
     }
 }
 
@@ -45,23 +45,37 @@ fn fire_projectile_system(
 
     for ev in ev_fire_projectile.iter() {
         commands
-            .spawn()
-            .insert_bundle(TransformBundle::from(Transform::from_translation(
+            .spawn_bundle(TransformBundle::from(Transform::from_translation(
                 transform.translation,
             )))
             .insert(RigidBody::Dynamic)
-            // .insert(LockedAxes::ROTATION_LOCKED)
+            .insert(LockedAxes::ROTATION_LOCKED)
             .insert(Velocity::zero())
-            .insert(Collider::cuboid(20., 10.))
-            .insert(Friction::coefficient(0.7))
+            .insert(Collider::cuboid(0.2, 0.60))
+            // .insert(Friction::coefficient(0.7))
             .insert(Restitution::coefficient(5.))
             .insert(Dominance::group(2))
             .insert(Projectile)
             .insert(ExternalImpulse {
-                impulse: Vec2::from_angle(ev.0) * 20.,
-                torque_impulse: 14.0,
+                impulse: Vec2::from_angle(ev.0).normalize() / PIXEL_PER_METER / 20.,
+                torque_impulse: 0.0,
             })
-            .insert(CollisionGroups::new(Group::GROUP_4, Group::GROUP_2));
+            .insert(CollisionGroups::new(Group::GROUP_4, Group::GROUP_2))
+            //
+            // Add Sprite
+            .with_children(|parent| {
+                parent.spawn_bundle(SpriteBundle {
+                    transform: Transform {
+                        scale: Vec3::new(0.5, 1., 1.),
+                        ..default()
+                    },
+                    sprite: Sprite {
+                        color: Color::BLUE,
+                        ..default()
+                    },
+                    ..default()
+                });
+            });
     }
 }
 
@@ -133,7 +147,7 @@ fn monster_aggro_system(
 }
 
 /* A system that displays the events. */
-fn display_events(
+fn projectile_collision_system(
     mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
     mut ev_monster_hit: EventWriter<HitMonsterEvent>,
@@ -141,7 +155,7 @@ fn display_events(
     for collision_event in collision_events.iter() {
         match collision_event {
             CollisionEvent::Started(monster_entity, projectile_entity, _) => {
-                commands.entity(*projectile_entity).despawn_recursive();
+                // commands.entity(*projectile_entity).despawn_recursive();
                 ev_monster_hit.send(HitMonsterEvent(*monster_entity));
             }
             CollisionEvent::Stopped(_, _, _) => {

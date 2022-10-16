@@ -137,7 +137,6 @@ fn spawn_creatures(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) -> () {
     add_creature(&mut commands, &mut asset_server, &mut texture_atlases, true);
-
     for _ in 0..10 {
         add_creature(
             &mut commands,
@@ -213,11 +212,11 @@ fn add_creature(
     if is_player {
         ent.insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_2));
     } else {
-        ent.insert(ActiveEvents::COLLISION_EVENTS);
-        ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_1));
-        ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_2));
-        ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_3));
-        ent.insert(CollisionGroups::new(Group::GROUP_2, Group::GROUP_4));
+        ent.insert(ActiveEvents::COLLISION_EVENTS); // Enable events to detect projectile events
+        ent.insert(CollisionGroups::new(
+            Group::GROUP_2,
+            Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3 | Group::GROUP_4,
+        ));
     }
 
     //

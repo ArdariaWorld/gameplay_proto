@@ -49,7 +49,6 @@ pub struct Game {
 
 fn setup_rapier(mut rapier_config: ResMut<RapierConfiguration>) {
     // Set gravity to x and spawn camera.
-    //rapier_config.gravity = Vector2::zeros();
     rapier_config.gravity = Vec2::new(0.0, 0.0);
 }
 

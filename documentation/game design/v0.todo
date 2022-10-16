@@ -72,9 +72,9 @@
 ✔ fix sprite display @started(22-10-15 21:00) @done(22-10-15 21:45) @lasted(45m18s)
 ✔ fix zIndex @done(22-10-15 21:45)
 ✔ fix monster movement @started(22-10-15 21:46) @done(22-10-15 21:48) @lasted(2m21s)
-[] fix projectile rotation
+✔ fix monsters / human collisions @started(22-10-15 21:48) @done(22-10-16 16:52) @lasted(19h4m26s)
+[] fix projectile size @started(22-10-15 22:19)
 [] add projectile sprite
-[] fix monsters / human collisions
 [] despawn arrows after velocity is 0
 [] keep monster pushback when hit by arrow
 
