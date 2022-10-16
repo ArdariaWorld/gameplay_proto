@@ -97,8 +97,8 @@ pub struct Creature(pub CreatureType);
 impl CreatureType {
     fn color(&self) -> Color {
         match self {
-            CreatureType::Human => Color::rgb(0.4, 0.7, 0.1),
-            CreatureType::Monster => Color::rgb(0.7, 0.1, 0.1),
+            CreatureType::Human => Color::GREEN,
+            CreatureType::Monster => Color::RED,
         }
     }
 
@@ -137,6 +137,8 @@ fn spawn_creatures(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) -> () {
     add_creature(&mut commands, &mut asset_server, &mut texture_atlases, true);
+
+    return;
     for _ in 0..10 {
         add_creature(
             &mut commands,

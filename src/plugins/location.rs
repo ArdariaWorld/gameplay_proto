@@ -3,7 +3,7 @@ use bevy_rapier2d::prelude::Velocity;
 
 use crate::utils::error::ErrorMessage;
 
-use super::population::{Creature, Player};
+use super::population::{Creature, Monster, Player};
 
 #[derive(Default, Component, Debug)]
 pub struct Location {
@@ -30,7 +30,7 @@ fn location_system(
     time: Res<Time>,
     mut creatures_query: Query<
         (&Parent, &mut Location, &Creature),
-        (With<Creature>, Without<Player>),
+        (With<Monster>, Without<Player>),
     >,
     mut q_parent: Query<(&Transform, &mut Velocity)>,
 ) {
@@ -48,6 +48,7 @@ fn location_system(
                 if destination
                     .abs_diff_eq(creature_position, creature.0.speed() * time.delta_seconds())
                 {
+                    println!("1. Setting vel to 0");
                     location.destination = None;
                     velocity.linvel = Vec2::new(0., 0.);
                     return Ok(());
@@ -55,8 +56,10 @@ fn location_system(
 
                 // Get normalized vector to destination
                 let direction = (destination - creature_position).normalize();
+                println!("2. Setting vel to {:?}", direction * creature.0.speed());
                 velocity.linvel = direction * creature.0.speed();
             } else {
+                println!("Setting vel to 0");
                 velocity.linvel = Vec2::new(0., 0.);
             }
         }

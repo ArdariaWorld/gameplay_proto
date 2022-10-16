@@ -1,4 +1,4 @@
-use crate::{MONSTER_AGGRO_DISTANCE, MONSTER_MAX_RANGE, PIXEL_PER_METER};
+use crate::{MONSTER_AGGRO_DISTANCE, MONSTER_MAX_RANGE, PIXEL_PER_METER, PROJECTILE_IMPULSE};
 
 use super::{location::*, player::KillPlayerEvent, population::*};
 use bevy::prelude::*;
@@ -28,7 +28,18 @@ impl Plugin for CombatPlugin {
             .add_system(monster_aggro_system)
             .add_system(monster_fight_system)
             .add_system(fire_projectile_system)
+            .add_system(print_projectile_stats)
             .add_system(projectile_collision_system);
+    }
+}
+
+fn print_projectile_stats(mut q_projectile: Query<&mut Velocity, With<Projectile>>) {
+    for mut velocity in q_projectile.iter_mut() {
+        if velocity.linvel.length() <= 1. {
+            velocity.linvel = Vec2::default();
+        } else {
+            println!("Velocity is: {:?}", velocity);
+        }
     }
 }
 
@@ -45,19 +56,23 @@ fn fire_projectile_system(
 
     for ev in ev_fire_projectile.iter() {
         commands
-            .spawn_bundle(TransformBundle::from(Transform::from_translation(
+            .spawn()
+            .insert_bundle(TransformBundle::from(Transform::from_translation(
                 transform.translation,
             )))
             .insert(RigidBody::Dynamic)
             .insert(LockedAxes::ROTATION_LOCKED)
-            .insert(Velocity::zero())
             .insert(Collider::cuboid(0.2, 0.60))
-            // .insert(Friction::coefficient(0.7))
+            .insert(Velocity::default())
+            .insert(Damping {
+                linear_damping: 1.,
+                ..default()
+            })
             .insert(Restitution::coefficient(5.))
             .insert(Dominance::group(2))
             .insert(Projectile)
             .insert(ExternalImpulse {
-                impulse: Vec2::from_angle(ev.0).normalize() / PIXEL_PER_METER / 20.,
+                impulse: Vec2::from_angle(ev.0).normalize() / PIXEL_PER_METER * PROJECTILE_IMPULSE,
                 torque_impulse: 0.0,
             })
             .insert(CollisionGroups::new(Group::GROUP_4, Group::GROUP_2))
@@ -79,6 +94,7 @@ fn fire_projectile_system(
     }
 }
 
+// Player hit a monster
 fn monster_hit_system(
     mut commands: Commands,
     mut entity_query: Query<(Entity, &Children)>,
@@ -165,6 +181,7 @@ fn projectile_collision_system(
     }
 }
 
+// Monster attack a player
 fn monster_fight_system(
     time: Res<Time>,
     mut monsters_query: Query<

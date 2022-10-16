@@ -5,7 +5,7 @@ use super::{
 };
 use crate::{
     utils::{error::ErrorMessage, vec::RandVec2},
-    GameState, HUMAN_MAX_RANGE,
+    GameState, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE,
 };
 use bevy::{
     input::{mouse::MouseButtonInput, ButtonState},
@@ -106,7 +106,7 @@ fn wasd_movement(
             velocity_vector.y = -1.;
         }
 
-        velocity.linvel = velocity_vector * 10.;
+        velocity.linvel = velocity_vector * HUMAN_STEP_DISTANCE;
         // println!("Linear velocity is {:?}", velocity.linvel);
         Ok::<(), ErrorMessage>(())
     };
@@ -233,7 +233,7 @@ fn mouse_left_click_system(
                 filter,
                 |entity| {
                     ev_monster_hit.send(HitMonsterEvent(entity));
-                    println!("The entity {:?} intersects our shape.", entity);
+                    // println!("The entity {:?} intersects our shape.", entity);
                     true // Return `false` instead if we want to stop searching for other colliders that contain this point.
                 },
             );

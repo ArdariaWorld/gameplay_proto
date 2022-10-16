@@ -73,9 +73,10 @@
 ✔ fix zIndex @done(22-10-15 21:45)
 ✔ fix monster movement @started(22-10-15 21:46) @done(22-10-15 21:48) @lasted(2m21s)
 ✔ fix monsters / human collisions @started(22-10-15 21:48) @done(22-10-16 16:52) @lasted(19h4m26s)
-[] fix projectile size @started(22-10-15 22:19)
+✔ fix projectile size and velocity @started(22-10-15 22:19) @done(22-10-16 17:50) @lasted(19h31m40s)
+✔ stop arrows once velocity is <1 @done(22-10-16 17:51)
 [] add projectile sprite
-[] despawn arrows after velocity is 0
+[] fix mouse angle bug when resize window
 [] keep monster pushback when hit by arrow
 
 # Backlog
