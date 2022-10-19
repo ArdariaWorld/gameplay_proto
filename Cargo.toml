@@ -11,7 +11,7 @@ rand = "0.8.5"
 thiserror = "1.0.37"
 bevy_rapier3d = { version = "*", features = [ "simd-stable", "debug-render" ] }
 bevy-inspector-egui = "0.13.0"
-bevy_mod_picking = "0.9"
+bevy_mod_raycast = "0.6.2"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

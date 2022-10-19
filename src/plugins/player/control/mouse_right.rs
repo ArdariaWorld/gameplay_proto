@@ -1,28 +1,42 @@
-fn mouse_right_click_system(
+use bevy::{
+    input::{mouse::MouseButtonInput, ButtonState},
+    math::Vec3Swizzles,
+    prelude::{EventReader, EventWriter, MouseButton, Query, Res, Transform, Vec2, With},
+    window::Windows,
+};
+use bevy_mod_raycast::Intersection;
+
+use crate::{
+    plugins::{combat::FireProjectileEvent, population::PlayerParent},
+    utils::error::ErrorMessage,
+};
+
+use super::mouse::MouseRaycastSet;
+
+pub fn mouse_right_click_system(
     windows: Res<Windows>,
+    mouse_pos_q: Query<&Intersection<MouseRaycastSet>>,
+    player_q: Query<&Transform, With<PlayerParent>>,
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
     mut ev_fire_projectile: EventWriter<FireProjectileEvent>,
 ) {
+    let mouse_position = match mouse_pos_q.get_single() {
+        Ok(p) => match p.position() {
+            Some(p) => p,
+            None => return,
+        },
+        Err(_) => return,
+    };
+
+    let player_translation = player_q
+        .get_single()
+        .expect("No player position")
+        .translation;
+
     for event in mouse_button_input_events.iter() {
         // If not event Pressed we do nothing
         if event.state == ButtonState::Pressed && event.button == MouseButton::Right {
-            let win = windows
-                .get_primary()
-                .ok_or(ErrorMessage::NoWindow)
-                .expect("No window");
-
-            // get angle from click position
-            // Should never happen as cursor_position should always exists when windows is clicked
-            let cursor_position = win.cursor_position().expect("No cursor position");
-
-            // Correct the mouse position with windows size (0,0 at center)
-            let centered_cursor_position = Vec2::new(
-                cursor_position.x - win.requested_width() / 2.,
-                cursor_position.y - win.requested_height() / 2.,
-            );
-
-            let mouse_angle = Vec2::new(1., 0.).angle_between(centered_cursor_position);
-
+            let mouse_angle = player_translation.xz().angle_between(mouse_position.xz());
             ev_fire_projectile.send(FireProjectileEvent(mouse_angle));
         };
     }

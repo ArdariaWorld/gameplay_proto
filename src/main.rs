@@ -1,13 +1,24 @@
 pub mod plugins;
 pub mod utils;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PresentMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
-use bevy_mod_picking::*;
-use bevy_rapier3d::prelude::*;
+use bevy_mod_raycast::{
+    DefaultPluginState, DefaultRaycastingPlugin, RayCastMesh, RayCastSource, RaycastSystem,
+};
+use bevy_rapier3d::{
+    prelude::{Collider, NoUserData, RapierPhysicsPlugin},
+    render::RapierDebugRenderPlugin,
+};
 use plugins::{
-    camera::camera_follow_player, combat::CombatPlugin, location::LocationPlugin,
-    player::player_plugin::PlayerPlugin, population::PopulationPlugin,
+    camera::camera_follow_player,
+    combat::CombatPlugin,
+    location::LocationPlugin,
+    player::{
+        control::mouse::{update_raycast_with_cursor, MouseRaycastSet},
+        player_plugin::PlayerPlugin,
+    },
+    population::PopulationPlugin,
 };
 
 pub const CAMERA_VEC_OFFSET: Vec3 = Vec3::new(0., 25., 25.0);
@@ -52,7 +63,7 @@ fn setup_graphics(mut commands: Commands) {
             transform: Transform::from_xyz(0., 25., 25.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
-        .insert_bundle(PickingCameraBundle::default());
+        .insert(RayCastSource::<MouseRaycastSet>::new());
 
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
@@ -82,7 +93,7 @@ fn setup_physics(
             transform: Transform::from_xyz(0., 0., 0.),
             ..default()
         })
-        .insert_bundle(PickableBundle::default());
+        .insert(RayCastMesh::<MouseRaycastSet>::default());
 }
 
 fn main() {
@@ -91,18 +102,29 @@ fn main() {
             title: "Ardaria Server Prototype".to_string(),
             width: 1080.,
             height: 720.,
+            present_mode: PresentMode::AutoNoVsync,
             ..default()
         })
+        .insert_resource(DefaultPluginState::<MouseRaycastSet>::default())
         // .init_resource::<Game>()
         .add_plugins(DefaultPlugins)
+        .add_plugin(DefaultRaycastingPlugin::<MouseRaycastSet>::default())
+        //
+        // You will need to pay attention to what order you add systems! Putting them in the wrong
+        // order can result in multiple frames of latency. Ray casting should probably happen near
+        // start of the frame. For example, we want to be sure this system runs before we construct
+        // any rays, hence the ".before(...)". You can use these provided RaycastSystem labels to
+        // order your systems with the ones provided by the raycasting plugin.
+        .add_system_to_stage(
+            CoreStage::First,
+            update_raycast_with_cursor.before(RaycastSystem::BuildRays::<MouseRaycastSet>),
+        )
         // .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_state(GameState::Playing)
-        .add_plugins(DefaultPickingPlugins)
-        .add_plugin(DebugCursorPickingPlugin)
         .add_plugin(PopulationPlugin)
         .add_system(camera_follow_player)
         .add_plugin(PlayerPlugin)

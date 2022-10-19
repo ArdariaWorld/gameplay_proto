@@ -90,6 +90,9 @@ pub struct Monster;
 #[derive(Component)]
 pub struct Player;
 
+#[derive(Component)]
+pub struct PlayerParent;
+
 #[derive(Component, Inspectable)]
 pub struct PlayerSwordRangeSensor;
 
@@ -200,6 +203,10 @@ fn add_creature(
         transform: Transform::from_xyz(0., 0., 0.),
         ..default()
     });
+
+    if is_player {
+        ent.insert(PlayerParent);
+    }
 
     ent.insert(RigidBody::Dynamic)
         .insert_bundle(TransformBundle::from_transform(
