@@ -83,7 +83,7 @@
 [] convert the game into 3D game @started(22-10-19 16:51)
 ✔ init game with camera and light @started(22-10-19 16:51) @done(22-10-19 17:35) @lasted(44m22s)
 ✔ add a mesh to the floor @started(22-10-19 17:18) @done(22-10-19 17:35) @lasted(17m4s)
-[] add player and monsters @started(22-10-19 17:37)
+✔ add player and monsters @started(22-10-19 17:37) @done(22-10-19 18:01) @lasted(24m15s)
 ✔ movement system with keyboard @started(22-10-19 17:40) @done(22-10-19 17:46) @lasted(6m17s)
 ✔ follow player with camera @started(22-10-19 17:37) @done(22-10-19 17:47) @lasted(10m4s)
 

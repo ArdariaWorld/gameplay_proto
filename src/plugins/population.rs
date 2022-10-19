@@ -1,5 +1,6 @@
 use crate::{
-    utils::vec::RandVec2, GameState, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
+    utils::vec::{RandVec2, RandVec3},
+    GameState, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
     MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE, MONSTER_STUN_COOLDOWN,
     PIXEL_PER_METER, PIXEL_SCALE,
 };
@@ -146,12 +147,23 @@ fn spawn_creatures(
     mut commands: Commands,
     mut asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> () {
-    add_creature(&mut commands, &mut asset_server, &mut texture_atlases, true);
+    add_creature(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        &mut asset_server,
+        &mut texture_atlases,
+        true,
+    );
 
     for _ in 0..10 {
         add_creature(
             &mut commands,
+            &mut meshes,
+            &mut materials,
             &mut asset_server,
             &mut texture_atlases,
             false,
@@ -161,6 +173,8 @@ fn spawn_creatures(
 
 fn add_creature(
     commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
     asset_server: &mut Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     is_player: bool,
@@ -183,13 +197,13 @@ fn add_creature(
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     let mut ent = commands.spawn_bundle(SpatialBundle {
-        transform: Transform::from_xyz(0., 0., 2.),
+        transform: Transform::from_xyz(0., 0., 0.),
         ..default()
     });
 
     ent.insert(RigidBody::Dynamic)
         .insert_bundle(TransformBundle::from_transform(
-            Transform::from_translation(RandVec2::new().extend(2.)),
+            Transform::from_translation(RandVec3::new()),
         ))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity {
@@ -198,8 +212,8 @@ fn add_creature(
         })
         .insert(Collider::cuboid(
             creature_type.size().x / 2.,
-            creature_type.size().x / 2.,
             creature_type.size().y / 2.,
+            creature_type.size().x / 2.,
         ))
         .insert(ColliderMassProperties::Density(2000.0))
         // .insert(Damping {
@@ -278,15 +292,14 @@ fn add_creature(
     //
     // Add Sprite
     .with_children(|parent| {
-        parent.spawn_bundle(SpriteBundle {
-            transform: Transform {
-                scale: Vec3::new(creature_type.size().x, creature_type.size().y, 1.),
-                ..default()
-            },
-            sprite: Sprite {
-                color: creature_type.color(),
-                ..default()
-            },
+        parent.spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(
+                creature_type.size().x,
+                creature_type.size().y,
+                creature_type.size().x,
+            ))),
+            material: materials.add(creature_type.color().into()),
+            transform: Transform::from_xyz(0., 0., 0.),
             ..default()
         });
     })

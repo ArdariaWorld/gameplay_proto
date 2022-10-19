@@ -53,11 +53,11 @@ fn wasd_movement(
         }
 
         if keyboard_input.pressed(KeyCode::Up) || keyboard_input.pressed(KeyCode::W) {
-            velocity_vector.z = 1.;
+            velocity_vector.z = -1.;
         }
 
         if keyboard_input.pressed(KeyCode::Down) || keyboard_input.pressed(KeyCode::S) {
-            velocity_vector.z = -1.;
+            velocity_vector.z = 1.;
         }
 
         velocity.linvel = velocity_vector * HUMAN_STEP_DISTANCE;
