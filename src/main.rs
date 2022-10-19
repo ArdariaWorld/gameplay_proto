@@ -4,7 +4,10 @@ pub mod utils;
 use bevy::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
-use plugins::{camera::camera_follow_player, player::PlayerPlugin, population::PopulationPlugin};
+use plugins::{
+    camera::camera_follow_player, combat::CombatPlugin, location::LocationPlugin,
+    player::PlayerPlugin, population::PopulationPlugin,
+};
 
 pub const CAMERA_VEC_OFFSET: Vec3 = Vec3::new(0., 25., 25.0);
 
@@ -96,13 +99,11 @@ fn main() {
         .add_state(GameState::Playing)
         .add_plugin(PopulationPlugin)
         .add_system(camera_follow_player)
-        // .add_plugin(CombatPlugin)
         .add_plugin(PlayerPlugin)
+        .add_plugin(LocationPlugin)
+        .add_plugin(CombatPlugin)
         // .add_plugin(UiPlugin)
-        // .add_plugin(LocationPlugin)
         // .add_plugin(HudPlugin)
-        // .add_startup_system(setup_rapier)
-        // .add_startup_system(init_world_map)
         .add_system(bevy::window::close_on_esc)
         .run();
 }

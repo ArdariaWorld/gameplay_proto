@@ -5,7 +5,7 @@ use crate::{
 
 use super::{location::*, player::KillPlayerEvent, population::*};
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
+use bevy_rapier3d::prelude::*;
 
 #[derive(Component, Default)]
 pub struct Projectile;
@@ -39,7 +39,7 @@ impl Plugin for CombatPlugin {
 fn print_projectile_stats(mut q_projectile: Query<&mut Velocity, With<Projectile>>) {
     for mut velocity in q_projectile.iter_mut() {
         if velocity.linvel.length() <= 1. {
-            velocity.linvel = Vec2::default();
+            velocity.linvel = Vec3::default();
         }
     }
 }
@@ -57,6 +57,14 @@ fn fire_projectile_system(
 
     for ev in ev_fire_projectile.iter() {
         println!("Applied projectile rotation and impulse {:?}", ev.0);
+
+        let vec_destination = Vec2::from_angle(ev.0).normalize();
+        let looking_at = Vec3::new(vec_destination.x, 1., vec_destination.y);
+        let impulse = Transform::default()
+            .looking_at(looking_at, Vec3::ZERO)
+            .translation
+            * PROJECTILE_IMPULSE;
+
         commands
             .spawn_bundle(SpatialBundle {
                 transform: Transform::from_xyz(0., 0., 2.),
@@ -69,7 +77,7 @@ fn fire_projectile_system(
                 ..default()
             }))
             .insert(LockedAxes::ROTATION_LOCKED)
-            .insert(Collider::cuboid(1.2 / 2., 0.2 / 2.))
+            .insert(Collider::cuboid(1.2 / 2., 0.2 / 2., 0.2 / 2.))
             .insert(Velocity::default())
             .insert(Damping {
                 linear_damping: 1.,
@@ -80,8 +88,8 @@ fn fire_projectile_system(
             .insert(ActiveEvents::COLLISION_EVENTS) // Enable events to detect projectile events
             .insert(Projectile)
             .insert(ExternalImpulse {
-                impulse: Vec2::from_angle(ev.0).normalize() / PIXEL_PER_METER * PROJECTILE_IMPULSE,
-                torque_impulse: 0.0,
+                impulse,
+                torque_impulse: Vec3::splat(0.),
             })
             .insert(CollisionGroups::new(Group::GROUP_4, Group::GROUP_2))
             //
@@ -144,8 +152,14 @@ fn monster_hit_system(
                         Vec2::from_angle(ev.1).normalize()
                     );
 
-                    external_impulse.impulse =
-                        Vec2::from_angle(ev.1).normalize() * MONSTER_HIT_IMPULSE;
+                    let vec_destination = Vec2::from_angle(ev.1).normalize();
+                    let looking_at = Vec3::new(vec_destination.x, 1., vec_destination.y);
+                    let impulse = Transform::default()
+                        .looking_at(looking_at, Vec3::ZERO)
+                        .translation
+                        * MONSTER_HIT_IMPULSE;
+
+                    external_impulse.impulse = impulse;
                     stats.hp -= player_stats.atk;
 
                     brain_state.conscious = ConsciousnessStateEnum::Stun;
