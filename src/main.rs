@@ -3,6 +3,7 @@ pub mod utils;
 
 use bevy::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_mod_picking::*;
 use bevy_rapier3d::prelude::*;
 use plugins::{
     camera::camera_follow_player, combat::CombatPlugin, location::LocationPlugin,
@@ -46,10 +47,12 @@ enum GameState {
 
 fn setup_graphics(mut commands: Commands) {
     // Add a camera so we can see the debug-render.
-    commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0., 25., 25.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..Default::default()
-    });
+    commands
+        .spawn_bundle(Camera3dBundle {
+            transform: Transform::from_xyz(0., 25., 25.0).looking_at(Vec3::ZERO, Vec3::Y),
+            ..Default::default()
+        })
+        .insert_bundle(PickingCameraBundle::default());
 
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
@@ -78,7 +81,8 @@ fn setup_physics(
             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             transform: Transform::from_xyz(0., 0., 0.),
             ..default()
-        });
+        })
+        .insert_bundle(PickableBundle::default());
 }
 
 fn main() {
@@ -97,6 +101,8 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_state(GameState::Playing)
+        .add_plugins(DefaultPickingPlugins)
+        .add_plugin(DebugCursorPickingPlugin)
         .add_plugin(PopulationPlugin)
         .add_system(camera_follow_player)
         .add_plugin(PlayerPlugin)

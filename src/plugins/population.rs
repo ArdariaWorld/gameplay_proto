@@ -116,8 +116,8 @@ impl CreatureType {
 
     pub fn size(&self) -> Vec3 {
         match self {
-            CreatureType::Human => Vec2::new(0.9, 1.8).extend(2.0),
-            CreatureType::Monster => Vec2::new(1.2, 2.5).extend(1.0),
+            CreatureType::Human => Vec3::new(0.9, 1.8, 0.9),
+            CreatureType::Monster => Vec3::new(1.2, 2.5, 1.2),
         }
     }
 
@@ -213,7 +213,7 @@ fn add_creature(
         .insert(Collider::cuboid(
             creature_type.size().x / 2.,
             creature_type.size().y / 2.,
-            creature_type.size().x / 2.,
+            creature_type.size().z / 2.,
         ))
         .insert(ColliderMassProperties::Density(2000.0))
         // .insert(Damping {
@@ -296,7 +296,7 @@ fn add_creature(
             mesh: meshes.add(Mesh::from(shape::Box::new(
                 creature_type.size().x,
                 creature_type.size().y,
-                creature_type.size().x,
+                creature_type.size().z,
             ))),
             material: materials.add(creature_type.color().into()),
             transform: Transform::from_xyz(0., 0., 0.),
