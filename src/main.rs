@@ -21,7 +21,8 @@ use plugins::{
     population::PopulationPlugin,
 };
 
-pub const CAMERA_VEC_OFFSET: Vec3 = Vec3::new(0., 25., 25.0);
+pub const CAMERA_VEC_OFFSET: f32 = 40.;
+pub const CAMERA_VEC_OFFSET_VEC: Vec3 = Vec3::new(0., CAMERA_VEC_OFFSET, CAMERA_VEC_OFFSET);
 
 pub const HUMAN_STEP_DISTANCE: f32 = 10.;
 pub const MONSTER_STEP_DISTANCE: f32 = 5.;
@@ -60,7 +61,7 @@ fn setup_graphics(mut commands: Commands) {
     // Add a camera so we can see the debug-render.
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: Transform::from_xyz(0., 25., 25.0).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(0., 15., 15.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
         .insert(RayCastSource::<MouseRaycastSet>::new());

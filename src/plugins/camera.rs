@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::CAMERA_VEC_OFFSET;
+use crate::CAMERA_VEC_OFFSET_VEC;
 
 use super::population::Player;
 
@@ -13,7 +13,7 @@ pub fn camera_follow_player(
     let mut camera_transform = camera_query.get_single_mut().expect("No camera transform");
 
     if let Ok(transform) = q_parent.get_mut(parent_entity.get()) {
-        camera_transform.translation = transform.translation + CAMERA_VEC_OFFSET;
+        camera_transform.translation = transform.translation + CAMERA_VEC_OFFSET_VEC;
         camera_transform.look_at(transform.translation, Vec3::Y);
     }
 }

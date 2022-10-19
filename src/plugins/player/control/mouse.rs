@@ -24,14 +24,3 @@ pub fn update_raycast_with_cursor(
         pick_source.cast_method = RayCastMethod::Screenspace(cursor_position);
     }
 }
-
-/// Report intersections
-pub fn intersection(query: Query<&Intersection<MouseRaycastSet>>) {
-    for intersection in &query {
-        println!(
-            "Distance {:?}, Position {:?}",
-            intersection.distance(),
-            intersection.position()
-        );
-    }
-}
