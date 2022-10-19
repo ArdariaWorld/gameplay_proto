@@ -7,7 +7,7 @@ use bevy_mod_picking::*;
 use bevy_rapier3d::prelude::*;
 use plugins::{
     camera::camera_follow_player, combat::CombatPlugin, location::LocationPlugin,
-    player::PlayerPlugin, population::PopulationPlugin,
+    player::player_plugin::PlayerPlugin, population::PopulationPlugin,
 };
 
 pub const CAMERA_VEC_OFFSET: Vec3 = Vec3::new(0., 25., 25.0);

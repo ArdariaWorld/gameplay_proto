@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::Velocity;
 
-use crate::utils::error::ErrorMessage;
+use crate::{utils::error::ErrorMessage, GameState};
 
 use super::population::{BrainState, ConsciousnessStateEnum, Creature, Monster, Player};
 
@@ -22,7 +22,10 @@ impl Location {
 pub struct LocationPlugin;
 impl Plugin for LocationPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(location_system);
+        app.add_system(location_system).add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_system(update_player_location_from_translation),
+        );
     }
 }
 
@@ -63,6 +66,24 @@ fn location_system(
                 velocity.linvel = Vec3::new(0., 0., 0.);
             }
         }
+
+        Ok::<(), ErrorMessage>(())
+    };
+
+    if let Err(error) = closure() {
+        println!("Error while handling click: {}", error);
+    }
+}
+
+fn update_player_location_from_translation(
+    mut q_parent: Query<&Transform>,
+    mut player_query: Query<(&Parent, &mut Location), With<Player>>,
+) {
+    let mut closure = || {
+        let (player_parent, mut location) = player_query.get_single_mut()?;
+        let transform = q_parent.get_mut(player_parent.get())?;
+
+        location.position = Some(transform.translation);
 
         Ok::<(), ErrorMessage>(())
     };

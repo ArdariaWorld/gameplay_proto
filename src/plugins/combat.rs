@@ -3,7 +3,7 @@ use crate::{
     PROJECTILE_IMPULSE,
 };
 
-use super::{location::*, player::KillPlayerEvent, population::*};
+use super::{location::*, player::player_events::KillPlayerEvent, population::*};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
