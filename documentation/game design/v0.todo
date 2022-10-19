@@ -81,6 +81,10 @@
 
 # 0.13
 [] convert the game into 3D game @started(22-10-19 16:51)
+✔ init game with camera and light @started(22-10-19 16:51) @done(22-10-19 17:35) @lasted(44m22s)
+✔ add a mesh to the floor @started(22-10-19 17:18) @done(22-10-19 17:35) @lasted(17m4s)
+[] add player and monsters
+[] follow player with camera
 
 # Backlog
 [] split code in smaller modules

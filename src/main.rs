@@ -4,6 +4,7 @@ pub mod utils;
 use bevy::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
+use plugins::{camera::camera_follow_player, population::PopulationPlugin};
 
 pub const HUMAN_STEP_DISTANCE: f32 = 10.;
 pub const MONSTER_STEP_DISTANCE: f32 = 5.;
@@ -41,25 +42,38 @@ enum GameState {
 fn setup_graphics(mut commands: Commands) {
     // Add a camera so we can see the debug-render.
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(-3.0, 3.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0., 25., 25.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
+    });
+
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            intensity: 300000.,
+            range: 90.,
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_xyz(4.0, 50.0, 4.0),
+        ..default()
     });
 }
 
-fn setup_physics(mut commands: Commands) {
+fn setup_physics(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     /* Create the ground. */
     commands
         .spawn()
-        .insert(Collider::cuboid(100.0, 0.1, 100.0))
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, -2.0, 0.0)));
-
-    /* Create the bouncing ball. */
-    commands
-        .spawn()
-        .insert(RigidBody::Dynamic)
-        .insert(Collider::ball(0.5))
-        .insert(Restitution::coefficient(0.7))
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, 4.0, 0.0)));
+        .insert(Collider::cuboid(30.0, 0.1, 30.0))
+        .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, -2.0, 0.0)))
+        .insert_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(60., 0.2, 60.))),
+            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            transform: Transform::from_xyz(0., 0., 0.),
+            ..default()
+        });
 }
 
 fn main() {
@@ -76,18 +90,15 @@ fn main() {
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        // .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
-        // PIXEL_PER_METER,
-        // ))
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_state(GameState::Playing)
-        // .add_plugin(CombatPlugin)
         // .add_plugin(PopulationPlugin)
+        // .add_system(camera_follow_player)
+        // .add_plugin(CombatPlugin)
         // .add_plugin(PlayerPlugin)
         // .add_plugin(UiPlugin)
         // .add_plugin(LocationPlugin)
         // .add_plugin(HudPlugin)
-        // .add_system(camera_follow_player)
         // .add_startup_system(setup_rapier)
         // .add_startup_system(init_world_map)
         .add_system(bevy::window::close_on_esc)

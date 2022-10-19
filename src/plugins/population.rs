@@ -7,7 +7,7 @@ use crate::{
 use super::location::Location;
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
-use bevy_rapier2d::prelude::*;
+use bevy_rapier3d::prelude::*;
 
 pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
@@ -175,24 +175,12 @@ fn add_creature(
         false => 0,
     };
 
-    let convex_polyline_opt = Collider::convex_polyline(Vec::from([
-        Vect::new(0., 0.) * HUMAN_MAX_RANGE,
-        Vect::new(0., 1.) * HUMAN_MAX_RANGE,
-        Vect::new(0.5, 0.866) * HUMAN_MAX_RANGE,
-        Vect::new(0.707, 0.707) * HUMAN_MAX_RANGE,
-        Vect::new(0.866, 0.5) * HUMAN_MAX_RANGE,
-        Vect::new(1., 0.) * HUMAN_MAX_RANGE,
-    ]));
+    let convex_polyline = Collider::cone(20., 20.);
 
     // Setup the sprite sheet
     let texture_handle = asset_server.load("images/hitZone.png");
     let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(300.0, 300.0), 1, 1);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
-    let convex_polyline = match convex_polyline_opt {
-        Some(it) => it,
-        _ => return,
-    };
 
     let mut ent = commands.spawn_bundle(SpatialBundle {
         transform: Transform::from_xyz(0., 0., 2.),
@@ -205,10 +193,11 @@ fn add_creature(
         ))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity {
-            linvel: Vec2::new(0., 0.),
-            angvel: 0.,
+            linvel: Vec3::splat(0.),
+            angvel: Vec3::splat(0.),
         })
         .insert(Collider::cuboid(
+            creature_type.size().x / 2.,
             creature_type.size().x / 2.,
             creature_type.size().y / 2.,
         ))
