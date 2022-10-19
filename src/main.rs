@@ -4,7 +4,9 @@ pub mod utils;
 use bevy::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
-use plugins::{camera::camera_follow_player, population::PopulationPlugin};
+use plugins::{camera::camera_follow_player, player::PlayerPlugin, population::PopulationPlugin};
+
+pub const CAMERA_VEC_OFFSET: Vec3 = Vec3::new(0., 25., 25.0);
 
 pub const HUMAN_STEP_DISTANCE: f32 = 10.;
 pub const MONSTER_STEP_DISTANCE: f32 = 5.;
@@ -92,10 +94,10 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_state(GameState::Playing)
-        // .add_plugin(PopulationPlugin)
-        // .add_system(camera_follow_player)
+        .add_plugin(PopulationPlugin)
+        .add_system(camera_follow_player)
         // .add_plugin(CombatPlugin)
-        // .add_plugin(PlayerPlugin)
+        .add_plugin(PlayerPlugin)
         // .add_plugin(UiPlugin)
         // .add_plugin(LocationPlugin)
         // .add_plugin(HudPlugin)
