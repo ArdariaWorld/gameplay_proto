@@ -9,7 +9,7 @@ edition = "2021"
 bevy = {version = "0.8.1", features = ["dynamic"] }
 rand = "0.8.5"
 thiserror = "1.0.37"
-bevy_rapier2d = "0.17.0"
+bevy_rapier3d = { version = "*", features = [ "simd-stable", "debug-render" ] }
 bevy-inspector-egui = "0.13.0"
 
 # Enable a small amount of optimization in debug mode
