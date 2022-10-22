@@ -94,6 +94,9 @@
 ✔ cone detection for sword range colider @started(22-10-22 17:44) @done(22-10-22 20:22) @lasted(2h38m53s)
 ✔ sword fight @done(22-10-22 20:22)
 
+# 0.14
+✔ refacto combat module @started(22-10-22 20:56) @done(22-10-22 21:20) @lasted(24m9s)
+[] refacto population module
 
 # Backlog
 [] fix arrows colliding with ground (edit collision groups)

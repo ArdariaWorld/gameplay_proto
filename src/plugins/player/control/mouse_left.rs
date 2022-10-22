@@ -1,26 +1,18 @@
-use std::f32::consts::PI;
-
 use bevy::{
     input::{mouse::MouseButtonInput, ButtonState},
-    prelude::{
-        Entity, EventReader, EventWriter, MouseButton, Parent, Query, Res, Transform, Vec3, With,
-        Without,
-    },
+    prelude::*,
 };
-use bevy_mod_raycast::Intersection;
-use bevy_rapier3d::prelude::{Collider, CollidingEntities, QueryFilter, RapierContext};
+use bevy_rapier3d::prelude::*;
 
 use crate::{
     plugins::{
-        combat::HitMonsterEvent,
+        combat::combat_events::HitMonsterEvent,
         population::{
-            Creature, MonsterParent, Player, PlayerParent, PlayerSwordRange, PlayerSwordRangeSensor,
+            MonsterParent, Player, PlayerParent, PlayerSwordRange, PlayerSwordRangeSensor,
         },
     },
     utils::error::ErrorMessage,
 };
-
-use super::mouse::MouseRaycastSet;
 
 pub fn mouse_left_click_system(
     mut mouse_button_input_events: EventReader<MouseButtonInput>,

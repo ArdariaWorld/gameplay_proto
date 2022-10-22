@@ -4,7 +4,7 @@ use bevy::{
 };
 use bevy_mod_raycast::Intersection;
 
-use crate::plugins::combat::FireProjectileEvent;
+use crate::plugins::combat::combat_events::FireProjectileEvent;
 
 use super::mouse::MouseRaycastSet;
 

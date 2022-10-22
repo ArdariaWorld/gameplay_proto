@@ -12,7 +12,7 @@ use bevy_rapier3d::{
 };
 use plugins::{
     camera::camera_follow_player,
-    combat::CombatPlugin,
+    combat::combat_plugin::CombatPlugin,
     location::LocationPlugin,
     player::{
         control::mouse::{update_raycast_with_cursor, MouseRaycastSet},
