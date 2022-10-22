@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use crate::{
     utils::vec::{RandVec2, RandVec3},
     GameState, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
@@ -93,6 +95,9 @@ pub struct Player;
 #[derive(Component)]
 pub struct PlayerParent;
 
+#[derive(Component)]
+pub struct MonsterParent;
+
 #[derive(Component, Inspectable)]
 pub struct PlayerSwordRangeSensor;
 
@@ -162,7 +167,6 @@ fn spawn_creatures(
         true,
     );
 
-    return;
     for _ in 0..10 {
         add_creature(
             &mut commands,
@@ -193,8 +197,6 @@ fn add_creature(
         false => 0,
     };
 
-    let convex_polyline = Collider::cone(20., 20.);
-
     // Setup the sprite sheet
     let texture_handle = asset_server.load("images/hitZone.png");
     let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(300.0, 300.0), 1, 1);
@@ -207,6 +209,8 @@ fn add_creature(
 
     if is_player {
         ent.insert(PlayerParent);
+    } else {
+        ent.insert(MonsterParent);
     }
 
     ent.insert(RigidBody::Dynamic)
@@ -251,10 +255,12 @@ fn add_creature(
     ent.with_children(|parent| {
         if is_player {
             let mut ent = parent.spawn();
-            ent.insert(convex_polyline)
-                .insert_bundle(TransformBundle::from(Transform::from_rotation(
-                    Quat::from_rotation_z(0.),
-                )))
+            ent.insert(Collider::cone(2., 3.))
+                .insert_bundle(TransformBundle::from(Transform {
+                    translation: Vec3::new(1.5, 0., 0.),
+                    rotation: Quat::from_rotation_z(PI / 2.),
+                    ..default()
+                }))
                 .insert(Sensor)
                 .insert(PlayerSwordRangeSensor)
                 .insert(CollisionGroups::new(Group::GROUP_3, Group::GROUP_2));
@@ -282,21 +288,38 @@ fn add_creature(
     })
     //
     //Sword range
-    .with_children(|parent| {
-        if is_player {
-            parent
-                .spawn_bundle(SpriteSheetBundle {
-                    texture_atlas: texture_atlas_handle.clone(),
-                    transform: Transform {
-                        scale: Vec2::splat(1. / PIXEL_PER_METER).extend(1.),
-                        ..default()
-                    },
-                    sprite: TextureAtlasSprite::new(0),
-                    ..Default::default()
-                })
-                .insert(PlayerSwordRange);
-        }
-    })
+    // .with_children(|parent| {
+    //     if is_player {
+    //         parent
+    //             .spawn_bundle(SpriteSheetBundle {
+    //                 texture_atlas: texture_atlas_handle.clone(),
+    //                 transform: Transform {
+    //                     scale: Vec2::splat(1. / PIXEL_PER_METER).extend(1.),
+    //                     ..default()
+    //                 },
+    //                 sprite: TextureAtlasSprite::new(0),
+    //                 ..Default::default()
+    //             })
+    //             .insert(PlayerSwordRange);
+    //     }
+    // })
+    //Sword range
+    // .with_children(|parent| {
+    //     if is_player {
+    //         parent
+    //             .spawn_bundle(PbrBundle {
+    //                 mesh: meshes.add(Mesh::from(shape::Box::new(
+    //                     creature_type.size().x,
+    //                     creature_type.size().y,
+    //                     creature_type.size().z,
+    //                 ))),
+    //                 material: materials.add(creature_type.color().into()),
+    //                 transform: Transform::from_xyz(0., 0., 0.),
+    //                 ..default()
+    //             })
+    //             .insert(PlayerSwordRange);
+    //     }
+    // })
     //
     // Add Sprite
     .with_children(|parent| {

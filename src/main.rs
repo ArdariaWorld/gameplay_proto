@@ -21,7 +21,7 @@ use plugins::{
     population::PopulationPlugin,
 };
 
-pub const CAMERA_VEC_OFFSET: f32 = 40.;
+pub const CAMERA_VEC_OFFSET: f32 = 30.;
 pub const CAMERA_VEC_OFFSET_VEC: Vec3 = Vec3::new(0., CAMERA_VEC_OFFSET, CAMERA_VEC_OFFSET);
 
 pub const HUMAN_STEP_DISTANCE: f32 = 10.;
@@ -120,7 +120,7 @@ fn main() {
             CoreStage::First,
             update_raycast_with_cursor.before(RaycastSystem::BuildRays::<MouseRaycastSet>),
         )
-        // .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())

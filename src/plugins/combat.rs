@@ -28,7 +28,7 @@ impl Plugin for CombatPlugin {
             .add_event::<HitMonsterEvent>()
             .add_event::<KillMonsterEvent>()
             .add_system(monster_hit_system)
-            .add_system(monster_aggro_system)
+            // .add_system(monster_aggro_system)
             .add_system(monster_fight_system)
             .add_system(fire_projectile_system)
             .add_system(print_projectile_stats)
@@ -57,9 +57,6 @@ fn fire_projectile_system(
             translation: player_transform.translation,
             ..default()
         };
-
-        println!("Player {}", player_transform.translation);
-        println!("Mouse {}", ev.0);
 
         let looking_at = Vec3::new(ev.0.x, 2., ev.0.z);
         projectile_transform.look_at(looking_at, Vec3::Y);

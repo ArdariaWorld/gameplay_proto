@@ -1,16 +1,15 @@
 use bevy::{
     input::{mouse::MouseButtonInput, ButtonState},
-    prelude::{EventReader, EventWriter, MouseButton, Query, Transform, With},
+    prelude::{EventReader, EventWriter, MouseButton, Query},
 };
 use bevy_mod_raycast::Intersection;
 
-use crate::plugins::{combat::FireProjectileEvent, population::PlayerParent};
+use crate::plugins::combat::FireProjectileEvent;
 
 use super::mouse::MouseRaycastSet;
 
 pub fn mouse_right_click_system(
     mouse_pos_q: Query<&Intersection<MouseRaycastSet>>,
-    player_q: Query<&Transform, With<PlayerParent>>,
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
     mut ev_fire_projectile: EventWriter<FireProjectileEvent>,
 ) {

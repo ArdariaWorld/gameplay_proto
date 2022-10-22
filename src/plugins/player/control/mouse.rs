@@ -2,7 +2,7 @@ use bevy::{
     prelude::{EventReader, Query},
     window::CursorMoved,
 };
-use bevy_mod_raycast::{Intersection, RayCastMethod, RayCastSource};
+use bevy_mod_raycast::{RayCastMethod, RayCastSource};
 
 /// This is a unit struct we will use to mark our generic `RayCastMesh`s and `RayCastSource` as part
 /// of the same group, or "RayCastSet". For more complex use cases, you might use this to associate

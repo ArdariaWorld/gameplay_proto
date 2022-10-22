@@ -1,20 +1,41 @@
-fn mouse_left_click_system(
+use std::f32::consts::PI;
+
+use bevy::{
+    input::{mouse::MouseButtonInput, ButtonState},
+    prelude::{
+        Entity, EventReader, EventWriter, MouseButton, Parent, Query, Res, Transform, Vec3, With,
+        Without,
+    },
+};
+use bevy_mod_raycast::Intersection;
+use bevy_rapier3d::prelude::{Collider, CollidingEntities, QueryFilter, RapierContext};
+
+use crate::{
+    plugins::{
+        combat::HitMonsterEvent,
+        population::{
+            Creature, MonsterParent, Player, PlayerParent, PlayerSwordRange, PlayerSwordRangeSensor,
+        },
+    },
+    utils::error::ErrorMessage,
+};
+
+use super::mouse::MouseRaycastSet;
+
+pub fn mouse_left_click_system(
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
-    windows: Res<Windows>,
     rapier_context: Res<RapierContext>,
-    mut collider_query: Query<
-        (&mut Transform, &Collider, Entity, &Parent),
+    q_monster: Query<Entity, (With<MonsterParent>, Without<Player>)>,
+    q_player: Query<&Transform, With<PlayerParent>>,
+    collider_query: Query<
+        Entity,
         (
             With<Collider>,
             With<PlayerSwordRangeSensor>,
             Without<PlayerSwordRange>,
         ),
     >,
-    mut sprite_range_query: Query<
-        &mut Transform,
-        (With<PlayerSwordRange>, Without<PlayerSwordRangeSensor>),
-    >,
-    q_parent: Query<&Transform, (Without<PlayerSwordRangeSensor>, Without<PlayerSwordRange>)>,
+
     mut ev_monster_hit: EventWriter<HitMonsterEvent>,
 ) {
     let mut closure = || {
@@ -24,53 +45,30 @@ fn mouse_left_click_system(
                 return Ok(());
             };
 
-            let win = windows.get_primary().ok_or(ErrorMessage::NoWindow)?;
+            let player_transform = q_player.get_single().expect("No Player found");
 
-            // get angle from click position
-            // Should never happen as cursor_position should always exists when windows is clicked
-            let cursor_position = win
-                .cursor_position()
-                .ok_or(ErrorMessage::NoCursorPosition)?;
+            let entity = collider_query.get_single().expect("No collider position");
 
-            // Correct the mouse position with windows size (0,0 at center)
-            let centered_cursor_position = Vec2::new(
-                cursor_position.x - win.requested_width() / 2.,
-                cursor_position.y - win.requested_height() / 2.,
-            );
+            /* Iterate through all the intersection pairs involving a specific collider. */
+            for (collider1, collider2, intersecting) in rapier_context.intersections_with(entity) {
+                if intersecting {
+                    let other = if entity == collider1 {
+                        collider2
+                    } else {
+                        collider1
+                    };
 
-            let mouse_angle = Vec2::splat(1.).angle_between(centered_cursor_position);
-            let (mut position, collider, entity, parent_entity) = collider_query
-                .get_single_mut()
-                .expect("No collider position");
+                    println!("The other {:?}", other);
+                    println!("monsters {}", q_monster.is_empty());
 
-            position.rotation = Quat::from_rotation_z(mouse_angle);
-
-            let mut sprite_transform = sprite_range_query
-                .get_single_mut()
-                .expect("No sprite transform");
-            sprite_transform.rotation = Quat::from_rotation_z(mouse_angle);
-
-            let transform = q_parent
-                .get(parent_entity.get())
-                .expect("No parent transform");
-
-            // // TODO how to exclude more than 1 collider?
-            let filter = QueryFilter::default()
-                .exclude_collider(entity)
-                .exclude_rigid_body(parent_entity.get());
-
-            // query collider
-            rapier_context.intersections_with_shape(
-                transform.translation.truncate(),
-                mouse_angle,
-                &collider,
-                filter,
-                |entity| {
-                    ev_monster_hit.send(HitMonsterEvent(entity, mouse_angle));
-                    // println!("The entity {:?} intersects our shape.", entity);
-                    true // Return `false` instead if we want to stop searching for other colliders that contain this point.
-                },
-            );
+                    // Detect if entity is a monster
+                    match q_monster.get(other) {
+                        Ok(monster) => ev_monster_hit
+                            .send(HitMonsterEvent(monster, player_transform.rotation.xyz().y)),
+                        Err(_) => continue,
+                    };
+                }
+            }
         }
 
         Ok::<(), ErrorMessage>(())
