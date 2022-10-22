@@ -162,6 +162,7 @@ fn spawn_creatures(
         true,
     );
 
+    return;
     for _ in 0..10 {
         add_creature(
             &mut commands,

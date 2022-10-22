@@ -90,6 +90,7 @@
 ✘ mouse angle detection @started(22-10-19 18:32) @cancelled(22-10-19 20:36) @wasted(2h05m50s)
 ✔ mouse angle detection new method @started(22-10-19 20:36) @done(22-10-19 21:15) @lasted(39m26s)
 ✔ fire arrow in the good direction @started(22-10-19 21:19) @done(22-10-19 22:24) @lasted(1h5m26s)
+✔ fix arrow fire @started(22-10-22 17:15) @done(22-10-22 17:34) @lasted(19m39s)
 [] cone detection for sword range colider
 [] sword fight
 [] fix arrows colliding with ground (edit collision groups)

@@ -58,7 +58,10 @@ fn fire_projectile_system(
             ..default()
         };
 
-        let looking_at = Vec3::new(ev.0.x, ev.0.y + 4., ev.0.z);
+        println!("Player {}", player_transform.translation);
+        println!("Mouse {}", ev.0);
+
+        let looking_at = Vec3::new(ev.0.x, 2., ev.0.z);
         projectile_transform.look_at(looking_at, Vec3::Y);
 
         commands
@@ -80,7 +83,7 @@ fn fire_projectile_system(
             .insert(ActiveEvents::COLLISION_EVENTS) // Enable events to detect projectile events
             .insert(Projectile)
             .insert(ExternalImpulse {
-                impulse: looking_at.normalize() * 10.,
+                impulse: projectile_transform.forward().normalize() * 10.,
                 torque_impulse: Vec3::splat(0.),
             })
             .insert(CollisionGroups::new(Group::GROUP_4, Group::GROUP_2))
