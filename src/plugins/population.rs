@@ -1,5 +1,8 @@
+use std::f32::consts::PI;
+
 use crate::{
-    utils::vec::RandVec2, GameState, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
+    utils::vec::{RandVec2, RandVec3},
+    GameState, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
     MONSTER_ATTACK_COOLDOWN, MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE, MONSTER_STUN_COOLDOWN,
     PIXEL_PER_METER, PIXEL_SCALE,
 };
@@ -7,7 +10,7 @@ use crate::{
 use super::location::Location;
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
-use bevy_rapier2d::prelude::*;
+use bevy_rapier3d::prelude::*;
 
 pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
@@ -89,6 +92,12 @@ pub struct Monster;
 #[derive(Component)]
 pub struct Player;
 
+#[derive(Component)]
+pub struct PlayerParent;
+
+#[derive(Component)]
+pub struct MonsterParent;
+
 #[derive(Component, Inspectable)]
 pub struct PlayerSwordRangeSensor;
 
@@ -115,8 +124,8 @@ impl CreatureType {
 
     pub fn size(&self) -> Vec3 {
         match self {
-            CreatureType::Human => Vec2::new(0.9, 1.8).extend(2.0),
-            CreatureType::Monster => Vec2::new(1.2, 2.5).extend(1.0),
+            CreatureType::Human => Vec3::new(0.9, 1.8, 0.9),
+            CreatureType::Monster => Vec3::new(1.2, 2.5, 1.2),
         }
     }
 
@@ -146,12 +155,23 @@ fn spawn_creatures(
     mut commands: Commands,
     mut asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> () {
-    add_creature(&mut commands, &mut asset_server, &mut texture_atlases, true);
+    add_creature(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        &mut asset_server,
+        &mut texture_atlases,
+        true,
+    );
 
     for _ in 0..10 {
         add_creature(
             &mut commands,
+            &mut meshes,
+            &mut materials,
             &mut asset_server,
             &mut texture_atlases,
             false,
@@ -161,6 +181,8 @@ fn spawn_creatures(
 
 fn add_creature(
     commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
     asset_server: &mut Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     is_player: bool,
@@ -175,42 +197,35 @@ fn add_creature(
         false => 0,
     };
 
-    let convex_polyline_opt = Collider::convex_polyline(Vec::from([
-        Vect::new(0., 0.) * HUMAN_MAX_RANGE,
-        Vect::new(0., 1.) * HUMAN_MAX_RANGE,
-        Vect::new(0.5, 0.866) * HUMAN_MAX_RANGE,
-        Vect::new(0.707, 0.707) * HUMAN_MAX_RANGE,
-        Vect::new(0.866, 0.5) * HUMAN_MAX_RANGE,
-        Vect::new(1., 0.) * HUMAN_MAX_RANGE,
-    ]));
-
     // Setup the sprite sheet
     let texture_handle = asset_server.load("images/hitZone.png");
     let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(300.0, 300.0), 1, 1);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
-    let convex_polyline = match convex_polyline_opt {
-        Some(it) => it,
-        _ => return,
-    };
-
     let mut ent = commands.spawn_bundle(SpatialBundle {
-        transform: Transform::from_xyz(0., 0., 2.),
+        transform: Transform::from_xyz(0., 0., 0.),
         ..default()
     });
 
+    if is_player {
+        ent.insert(PlayerParent);
+    } else {
+        ent.insert(MonsterParent);
+    }
+
     ent.insert(RigidBody::Dynamic)
         .insert_bundle(TransformBundle::from_transform(
-            Transform::from_translation(RandVec2::new().extend(2.)),
+            Transform::from_translation(RandVec3::new()),
         ))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity {
-            linvel: Vec2::new(0., 0.),
-            angvel: 0.,
+            linvel: Vec3::splat(0.),
+            angvel: Vec3::splat(0.),
         })
         .insert(Collider::cuboid(
             creature_type.size().x / 2.,
             creature_type.size().y / 2.,
+            creature_type.size().z / 2.,
         ))
         .insert(ColliderMassProperties::Density(2000.0))
         // .insert(Damping {
@@ -240,10 +255,12 @@ fn add_creature(
     ent.with_children(|parent| {
         if is_player {
             let mut ent = parent.spawn();
-            ent.insert(convex_polyline)
-                .insert_bundle(TransformBundle::from(Transform::from_rotation(
-                    Quat::from_rotation_z(0.),
-                )))
+            ent.insert(Collider::cone(2., 3.))
+                .insert_bundle(TransformBundle::from(Transform {
+                    translation: Vec3::new(1.5, 0., 0.),
+                    rotation: Quat::from_rotation_z(PI / 2.),
+                    ..default()
+                }))
                 .insert(Sensor)
                 .insert(PlayerSwordRangeSensor)
                 .insert(CollisionGroups::new(Group::GROUP_3, Group::GROUP_2));
@@ -271,33 +288,49 @@ fn add_creature(
     })
     //
     //Sword range
-    .with_children(|parent| {
-        if is_player {
-            parent
-                .spawn_bundle(SpriteSheetBundle {
-                    texture_atlas: texture_atlas_handle.clone(),
-                    transform: Transform {
-                        scale: Vec2::splat(1. / PIXEL_PER_METER).extend(1.),
-                        ..default()
-                    },
-                    sprite: TextureAtlasSprite::new(0),
-                    ..Default::default()
-                })
-                .insert(PlayerSwordRange);
-        }
-    })
+    // .with_children(|parent| {
+    //     if is_player {
+    //         parent
+    //             .spawn_bundle(SpriteSheetBundle {
+    //                 texture_atlas: texture_atlas_handle.clone(),
+    //                 transform: Transform {
+    //                     scale: Vec2::splat(1. / PIXEL_PER_METER).extend(1.),
+    //                     ..default()
+    //                 },
+    //                 sprite: TextureAtlasSprite::new(0),
+    //                 ..Default::default()
+    //             })
+    //             .insert(PlayerSwordRange);
+    //     }
+    // })
+    //Sword range
+    // .with_children(|parent| {
+    //     if is_player {
+    //         parent
+    //             .spawn_bundle(PbrBundle {
+    //                 mesh: meshes.add(Mesh::from(shape::Box::new(
+    //                     creature_type.size().x,
+    //                     creature_type.size().y,
+    //                     creature_type.size().z,
+    //                 ))),
+    //                 material: materials.add(creature_type.color().into()),
+    //                 transform: Transform::from_xyz(0., 0., 0.),
+    //                 ..default()
+    //             })
+    //             .insert(PlayerSwordRange);
+    //     }
+    // })
     //
     // Add Sprite
     .with_children(|parent| {
-        parent.spawn_bundle(SpriteBundle {
-            transform: Transform {
-                scale: Vec3::new(creature_type.size().x, creature_type.size().y, 1.),
-                ..default()
-            },
-            sprite: Sprite {
-                color: creature_type.color(),
-                ..default()
-            },
+        parent.spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(
+                creature_type.size().x,
+                creature_type.size().y,
+                creature_type.size().z,
+            ))),
+            material: materials.add(creature_type.color().into()),
+            transform: Transform::from_xyz(0., 0., 0.),
             ..default()
         });
     })
