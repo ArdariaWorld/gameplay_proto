@@ -14,6 +14,7 @@ use bevy_text_mesh::TextMeshPlugin;
 use plugins::{
     camera::camera_follow_player,
     combat::combat_plugin::CombatPlugin,
+    items::items_plugin::ItemsPlugin,
     location::LocationPlugin,
     player::{
         control::mouse::{update_raycast_with_cursor, MouseRaycastSet},
@@ -25,6 +26,8 @@ use plugins::{
 
 pub const CAMERA_VEC_OFFSET: f32 = 30.;
 pub const CAMERA_VEC_OFFSET_VEC: Vec3 = Vec3::new(0., CAMERA_VEC_OFFSET, CAMERA_VEC_OFFSET);
+
+pub const SWORD_SLASH_TIME: f32 = 0.6;
 
 pub const HUMAN_STEP_DISTANCE: f32 = 10.;
 pub const MONSTER_STEP_DISTANCE: f32 = 5.;
@@ -135,6 +138,7 @@ fn main() {
         .add_plugin(LocationPlugin)
         .add_plugin(CombatPlugin)
         .add_plugin(UiPlugin)
+        .add_plugin(ItemsPlugin)
         // .add_plugin(HudPlugin)
         .add_system(bevy::window::close_on_esc)
         .run();
