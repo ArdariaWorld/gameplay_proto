@@ -11,7 +11,6 @@ use super::mouse::MouseRaycastSet;
 pub fn mouse_right_click_system(
     mouse_pos_q: Query<&Intersection<MouseRaycastSet>>,
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
-    mut ev_fire_projectile: EventWriter<FireProjectileEvent>,
 ) {
     for event in mouse_button_input_events.iter() {
         // If not event Pressed we do nothing
@@ -23,8 +22,6 @@ pub fn mouse_right_click_system(
                 },
                 Err(_) => return,
             };
-
-            ev_fire_projectile.send(FireProjectileEvent(mouse_position.clone()));
         };
     }
 }

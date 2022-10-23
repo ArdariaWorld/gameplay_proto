@@ -27,8 +27,6 @@ pub fn mouse_left_click_system(
             Without<PlayerSwordRange>,
         ),
     >,
-
-    mut ev_monster_hit: EventWriter<HitMonsterEvent>,
 ) {
     let mut closure = || {
         for event in mouse_button_input_events.iter() {
@@ -54,11 +52,6 @@ pub fn mouse_left_click_system(
                     println!("monsters {}", q_monster.is_empty());
 
                     // Detect if entity is a monster
-                    match q_monster.get(other) {
-                        Ok(monster) => ev_monster_hit
-                            .send(HitMonsterEvent(monster, player_transform.rotation.xyz().y)),
-                        Err(_) => continue,
-                    };
                 }
             }
         }

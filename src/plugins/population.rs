@@ -44,6 +44,12 @@ pub struct BrainState {
 struct HpsDisplay;
 
 #[derive(Default, Bundle)]
+pub struct PhysicsBundle {
+    #[bundle]
+    transform: TransformBundle,
+}
+
+#[derive(Default, Bundle)]
 pub struct PlayerBundle {
     #[bundle]
     creature: CreatureBundle,
@@ -206,51 +212,54 @@ fn add_creature(
     };
 
     // Setup the sprite sheet
-    let texture_handle = asset_server.load("images/hitZone.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(300.0, 300.0), 1, 1);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
     let font: Handle<TextMeshFont> = asset_server.load("fonts/FiraSans-Medium.ttf#mesh");
 
+    // Spawn SpatialBundle which will hold everything
     let mut ent = commands.spawn_bundle(SpatialBundle {
         transform: Transform::from_xyz(0., 0., 0.),
         ..default()
     });
 
-    ent.insert(CreatureParent);
+    // Add the Creature related stuff
+    ent.insert_bundle(CreatureBundle::new(
+        creature_type.clone(),
+        "Jbb".to_string(),
+        100.0,
+        creature_type.attack(),
+    ))
+    .insert(CreatureParent);
 
+    // Add specific Components depending on the creature type
     if is_player {
         ent.insert(PlayerParent);
     } else {
         ent.insert(MonsterParent);
     }
 
-    ent.insert(RigidBody::Dynamic)
-        .insert_bundle(TransformBundle::from_transform(
-            Transform::from_translation(RandVec3::new()),
-        ))
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert(Velocity {
-            linvel: Vec3::splat(0.),
-            angvel: Vec3::splat(0.),
-        })
-        .insert(Collider::cuboid(
-            creature_type.size().x / 2.,
-            creature_type.size().y / 2.,
-            creature_type.size().z / 2.,
-        ))
-        .insert(ColliderMassProperties::Density(2000.0))
-        // .insert(Damping {
-        // linear_damping: 50.,
-        // angular_damping: 0.,
-        // })
-        .insert(Damping {
-            linear_damping: 1.,
-            ..default()
-        })
-        // .insert(Restitution::coefficient(3.))
-        .insert(ExternalImpulse::default())
-        .insert(Dominance::group(dominance_group));
+    // Add the creature physics bundle
+    ent.insert_bundle(TransformBundle::from_transform(
+        Transform::from_translation(RandVec3::new()),
+    ))
+    .insert(RigidBody::Dynamic)
+    .insert(LockedAxes::ROTATION_LOCKED)
+    .insert(Velocity {
+        linvel: Vec3::splat(0.),
+        angvel: Vec3::splat(0.),
+    })
+    .insert(Collider::cuboid(
+        creature_type.size().x / 2.,
+        creature_type.size().y / 2.,
+        creature_type.size().z / 2.,
+    ))
+    .insert(ColliderMassProperties::Density(2000.0))
+    .insert(Damping {
+        linear_damping: 1.,
+        ..default()
+    })
+    .insert(ExternalImpulse::default())
+    .insert(Dominance::group(dominance_group));
 
+    // Specific groups depending on creature type
     if is_player {
         ent.insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_2));
     } else {
@@ -427,21 +436,9 @@ fn get_child_hps(
     None
 }
 
-fn display_hps_system(
-    creatures_q: Query<&Children, With<CreatureParent>>,
-    mut text_q: Query<&mut TextMesh, With<HpsDisplay>>,
-    stats_q: Query<&Stats, With<Creature>>,
-) {
-    for children in creatures_q.iter() {
-        if let Some(hps) = get_child_hps(&children, &stats_q) {
-            for &child in children {
-                let hps_string = String::from(format!("{}", hps));
-                match text_q.get_mut(child) {
-                    Ok(mut text_mesh) => text_mesh.text = hps_string,
-                    Err(_) => continue,
-                };
-            }
-        }
+fn display_hps_system(mut stats_q: Query<(&Stats, &mut TextMesh), With<Creature>>) {
+    for (stat, mut tex_mesh) in stats_q.iter_mut() {
+        tex_mesh.text = String::from(format!("{}", stat.hp));
     }
 }
 
