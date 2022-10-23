@@ -8,7 +8,7 @@ use crate::{
 };
 
 use super::location::Location;
-use bevy::prelude::*;
+use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
 use bevy_text_mesh::{TextMesh, TextMeshBundle, TextMeshFont};
@@ -17,7 +17,7 @@ pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_creatures)
-            .add_system(display_hps_system)
+            .add_system(display_hps_system_clone)
             .add_system(change_consciousness_system);
     }
 }
@@ -127,6 +127,82 @@ pub enum CreatureType {
 #[derive(Default, Component)]
 pub struct Creature(pub CreatureType);
 
+#[derive(Component, Bundle)]
+pub struct CreatureHolder {
+    ui: UiHolder,
+    stats: Stats,
+}
+
+#[derive(Component)]
+struct UiHolder {
+    text_mesh_hp_entity: Option<Entity>,
+}
+
+impl CreatureHolder {
+    pub fn init(
+        &mut self,
+        commands: &mut Commands,
+        ent: &mut EntityCommands,
+        meshes: &mut ResMut<Assets<Mesh>>,
+        materials: &mut ResMut<Assets<StandardMaterial>>,
+        asset_server: &mut Res<AssetServer>,
+    ) {
+        let font: Handle<TextMeshFont> = asset_server.load("fonts/FiraSans-Medium.ttf#mesh");
+
+        self.spawn_hp_text_mesh_child(ent, font);
+    }
+}
+
+trait SpawnHpsTextMeshChild {
+    fn spawn_hp_text_mesh_child(
+        &mut self,
+        parent: &mut EntityCommands,
+        font: Handle<TextMeshFont>,
+    ) -> ();
+}
+
+impl SpawnHpsTextMeshChild for CreatureHolder {
+    fn spawn_hp_text_mesh_child(&mut self, cmds: &mut EntityCommands, font: Handle<TextMeshFont>) {
+        cmds.add_children(|parent| {
+            let mut children = parent.spawn_bundle(TextMeshBundle {
+                text_mesh: TextMesh::new_with_color("[hp]", font, Color::WHITE),
+                transform: Transform {
+                    translation: Vec3::new(-1., 1.75, 0.),
+                    scale: Vec3::splat(3.),
+                    ..default()
+                },
+                ..Default::default()
+            });
+
+            children.insert(HpsDisplay);
+
+            self.ui.text_mesh_hp_entity = Some(children.id());
+        });
+    }
+}
+
+trait UpdateHpsTextMesh {
+    fn update_hps(&mut self, text_mesh_q: &mut Query<&mut TextMesh, With<HpsDisplay>>) -> ();
+}
+
+impl UpdateHpsTextMesh for CreatureHolder {
+    fn update_hps(&mut self, text_mesh_q: &mut Query<&mut TextMesh, With<HpsDisplay>>) {
+        println!("Attempt to update hps {:?}", text_mesh_q.is_empty());
+
+        let mesh_entity = match self.ui.text_mesh_hp_entity {
+            Some(mesh) => mesh,
+            None => return,
+        };
+
+        match text_mesh_q.get_mut(mesh_entity) {
+            Ok(mut mesh) => mesh.text = String::from(format!("{}", self.stats.hp)),
+            Err(_) => {
+                error!("No text mesh for entity {:?}", mesh_entity)
+            }
+        };
+    }
+}
+
 impl CreatureType {
     fn color(&self) -> Color {
         match self {
@@ -171,16 +247,49 @@ fn spawn_creatures(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> () {
-    add_creature(
+    // add_creature(
+    //     &mut commands,
+    //     &mut meshes,
+    //     &mut materials,
+    //     &mut asset_server,
+    //     &mut texture_atlases,
+    //     true,
+    // );
+
+    // let mut creature_holder = CreatureHolder {
+    // spatial_bundle: SpatialBundle {
+    // transform: Transform::from_xyz(0., 0., 0.),
+    // ..default()
+    // },
+    // ui: UiHolder {
+    // text_mesh_hp_entity: None,
+    // },
+    // stats: Stats { atk: 1., hp: 100. },
+    // };
+
+    // Spawn SpatialBundle which will hold everything
+    let mut ent = commands.spawn_bundle(CreatureHolder {
+        spatial_bundle: SpatialBundle {
+            transform: Transform::from_xyz(0., 0., 0.),
+            ..default()
+        },
+        ui: UiHolder {
+            text_mesh_hp_entity: None,
+        },
+        stats: Stats { atk: 1., hp: 100. },
+    });
+
+    ent.insert(creature_holder);
+
+    creature_holder.init(
         &mut commands,
+        &mut ent,
         &mut meshes,
         &mut materials,
         &mut asset_server,
-        &mut texture_atlases,
-        true,
     );
+    return;
 
-    // return;
     for _ in 0..100 {
         add_creature(
             &mut commands,
@@ -215,10 +324,7 @@ fn add_creature(
     let font: Handle<TextMeshFont> = asset_server.load("fonts/FiraSans-Medium.ttf#mesh");
 
     // Spawn SpatialBundle which will hold everything
-    let mut ent = commands.spawn_bundle(SpatialBundle {
-        transform: Transform::from_xyz(0., 0., 0.),
-        ..default()
-    });
+    let mut ent = commands.spawn_bundle(SpatialBundle { ..default() });
 
     // Add the Creature related stuff
     ent.insert_bundle(CreatureBundle::new(
@@ -368,58 +474,7 @@ fn add_creature(
                 ..Default::default()
             })
             .insert(HpsDisplay);
-        // parent.spawn_bundle(NodeBundle { ..default() });
-        // parent.spawn_bundle(
-        //     // Create a TextBundle that has a Text with a single section.
-        //     TextBundle::from_section(
-        //         // Accepts a `String` or any type that converts into a `String`, such as `&str`
-        //         "hello\nbevy!",
-        //         TextStyle {
-        //             font: asset_server.load("fonts/FiraCode-Bold.ttf"),
-        //             font_size: 100.0,
-        //             color: Color::WHITE,
-        //         },
-        //     ) // Set the alignment of the Text
-        //     .with_text_alignment(TextAlignment::TOP_CENTER)
-        //     // Set the style of the TextBundle itself.
-        //     .with_style(Style {
-        //         align_self: AlignSelf::FlexEnd,
-        //         position_type: PositionType::Absolute,
-        //         position: UiRect {
-        //             bottom: Val::Px(5.0),
-        //             right: Val::Px(15.0),
-        //             ..default()
-        //         },
-        //         ..default()
-        //     }),
-        // );
     });
-    //
-    // Add Text
-    // .with_children(|parent| {
-    //     parent
-    //         .spawn_bundle(Text2dBundle {
-    //             text: Text::from_section(
-    //                 100.0.to_string(),
-    //                 TextStyle {
-    //                     font_size: 40.0,
-    //                     color: Color::WHITE,
-    //                     font: asset_server.load("fonts/FiraCode-Bold.ttf"),
-    //                 },
-    //             ),
-    //             transform: Transform {
-    //                 translation: Vec3::new(
-    //                     -creature_type.size().x / 2. - 0.1,
-    //                     creature_type.size().y,
-    //                     0.,
-    //                 ),
-    //                 scale: Vec2::splat(PIXEL_SCALE).extend(1.),
-    //                 ..default()
-    //             },
-    //             ..default()
-    //         })
-    //         .insert(HpsDisplay);
-    // });
 }
 
 fn get_child_hps(
@@ -439,6 +494,18 @@ fn get_child_hps(
 fn display_hps_system(mut stats_q: Query<(&Stats, &mut TextMesh), With<Creature>>) {
     for (stat, mut tex_mesh) in stats_q.iter_mut() {
         tex_mesh.text = String::from(format!("{}", stat.hp));
+    }
+}
+
+fn display_hps_system_clone(
+    mut creature_q: Query<(&mut CreatureHolder, Entity), With<Creature>>,
+    mut text_mesh_q: Query<&mut TextMesh, With<HpsDisplay>>,
+) {
+    for (mut creature, entity) in creature_q.iter_mut() {
+        // for mut child in children.iter_mut() {
+        creature.update_hps(&mut text_mesh_q);
+        // }
+        // tex_mesh.text = String::from(format!("{}", stat.hp));
     }
 }
 
