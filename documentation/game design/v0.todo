@@ -101,27 +101,41 @@
 ✔ display hp on top of creatures @started(22-10-23 13:02) @done(22-10-23 14:47) @lasted(1h45m49s)
 
 # Backlog
-[] refacto population module
-[] fix arrows colliding with ground (edit collision groups)
-[] split code in smaller modules
-[] fix mouse angle bug when resize window
-[] place heal resources on the map
-[] collecting resources heals player
-[] respawn monsters
-[] better fight system (click on head skill)
-[] Setup tests
-[] split plugin in several files
-[] FIX respawn button -> https://github.com/ArdariaWorld/gameplay_proto/issues/1
+## Steps
 [] release on web `prototype.ardaria.com`
+
+## Features
+[] regain health from dropped monster souls
+[] XP system with skills
+[] place heal resources on the map
+[] respawn monsters
+[] collecting resources heals player
 [] IA
 [] monster roam
 [] monster aggro
 [] player defend
-[] fight atk -> def -> atk
 [] player input
-[] visual feedback
-[] select monster
-[] position player
-[] position monster
-[] refacto sprite size / collider size with coorect pixel ratio
+[] fight atk -> def -> atk
+[] sword mesh animated
+[] VFX system
+[] Music system
 
+## Refacto
+[] refacto population module
+[] split code in smaller modules
+[] Setup tests
+[] split plugin in several files
+
+## Fix - Physics
+[] fix arrows colliding with ground (edit collision groups)
+[] better fight system (click on head skill)
+[] impulse on hit
+
+## Fix - UI
+[] fix score
+[] display mental state (stun - mindfull)
+
+## Fix - Various
+[] fix mouse angle bug when resize window
+[] FIX respawn button -> https://github.com/ArdariaWorld/gameplay_proto/issues/1
+[] fix die and respawn

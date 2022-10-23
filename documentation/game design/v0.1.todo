@@ -2,23 +2,23 @@
 Explore + Farm + Craft + Fight + Evolve
 
 ## Explore
-[] Generate world (grid world)
-[] Spawn monsters
-[] Move
+[x] Generate world (grid world)
+[x] Spawn monsters
+[x] Move
 
 ## Fight
 [] Equip items
 [] select monster
-[] attack monster
-[] receive hit
+[x] attack monster
+[x] receive hit
 [] die
-[] kill
+[x] kill
 [] get XP
 
 ## AI
 [] spawn monster
-[] monster idle <-> roam
-[] monster aggro
+[x] monster idle <-> roam
+[x] monster aggro
 
 ## Evolve
 [] open skill tree
