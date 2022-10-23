@@ -17,7 +17,7 @@ pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_creatures)
-            .add_system(display_hps_system_clone)
+            .add_system(display_hps_system)
             .add_system(change_consciousness_system);
     }
 }
@@ -40,8 +40,8 @@ pub struct BrainState {
     pub stun_at: Timer,
 }
 
-#[derive(Component, Default)]
-struct HpsDisplay;
+#[derive(Component, Default, Debug)]
+struct HpsDisplay(pub f32);
 
 #[derive(Default, Bundle)]
 pub struct PhysicsBundle {
@@ -127,42 +127,212 @@ pub enum CreatureType {
 #[derive(Default, Component)]
 pub struct Creature(pub CreatureType);
 
+#[derive(Default, Component)]
+pub struct IsPlayer(pub bool);
+
 #[derive(Component, Bundle)]
-pub struct CreatureHolder {
-    ui: UiHolder,
-    stats: Stats,
+pub struct CreaturePhysicBundle {
+    #[bundle]
+    transform_bundle: TransformBundle,
+    rigid_body: RigidBody,
+    locked_axes: LockedAxes,
+    velocity: Velocity,
+    collider: Collider,
+    mass: ColliderMassProperties,
+    damping: Damping,
+    external_impulse: ExternalImpulse,
+    dominance: Dominance,
+}
+
+impl CreaturePhysicBundle {
+    pub fn new(creature_type: CreatureType, dominance_group: i8) -> Self {
+        Self {
+            transform_bundle: TransformBundle::from_transform(Transform::from_translation(
+                RandVec3::new(),
+            )),
+            rigid_body: RigidBody::Dynamic,
+            locked_axes: LockedAxes::ROTATION_LOCKED,
+            velocity: Velocity {
+                linvel: Vec3::splat(0.),
+                angvel: Vec3::splat(0.),
+            },
+            collider: Collider::cuboid(
+                creature_type.size().x / 2.,
+                creature_type.size().y / 2.,
+                creature_type.size().z / 2.,
+            ),
+            mass: ColliderMassProperties::Density(2000.0),
+            damping: Damping {
+                linear_damping: 1.,
+                angular_damping: 0.,
+            },
+            external_impulse: ExternalImpulse::default(),
+            dominance: Dominance::group(dominance_group),
+        }
+    }
 }
 
 #[derive(Component)]
-struct UiHolder {
+pub struct CreatureHolder {
+    pub creature_type: CreatureType,
+    pub stats: Option<Stats>,
+    pub is_player: IsPlayer,
+    pub physic_bundle: Option<CreaturePhysicBundle>,
+}
+
+#[derive(Component)]
+pub struct UiHolder {
     text_mesh_hp_entity: Option<Entity>,
 }
 
 impl CreatureHolder {
+    pub const fn new(
+        creature_type: CreatureType,
+        stats: Stats,
+        is_player: IsPlayer,
+        physic_bundle: CreaturePhysicBundle,
+    ) -> Self {
+        Self {
+            creature_type,
+            stats: Some(stats),
+            is_player,
+            physic_bundle: Some(physic_bundle),
+        }
+    }
+
     pub fn init(
         &mut self,
         commands: &mut Commands,
-        ent: &mut EntityCommands,
         meshes: &mut ResMut<Assets<Mesh>>,
         materials: &mut ResMut<Assets<StandardMaterial>>,
         asset_server: &mut Res<AssetServer>,
     ) {
         let font: Handle<TextMeshFont> = asset_server.load("fonts/FiraSans-Medium.ttf#mesh");
 
-        self.spawn_hp_text_mesh_child(ent, font);
+        let mut parent = commands.spawn_bundle(SpatialBundle {
+            transform: Transform::from_xyz(0., 0., 0.),
+            ..default()
+        });
+
+        // Insert base components
+        parent.insert(CreatureParent);
+        if self.is_player.0 {
+            parent.insert(PlayerParent);
+        } else {
+            parent.insert(MonsterParent);
+        }
+
+        // Add Stats
+        parent.insert(self.stats.take().unwrap());
+
+        // Add Physical body
+        self.insert_physical_body(&mut parent);
+
+        // Spawn children
+        self.spawn_sword_range_collider_child(&mut parent);
+        self.spawn_hp_text_mesh_child(&mut parent, font);
+        self.spawn_body_mesh_child(&mut parent, meshes, materials);
     }
 }
 
+// ----------------
+//
+// Physical Body Bundle
+trait InsertPhysicalBody {
+    fn insert_physical_body(&mut self, parent: &mut EntityCommands) -> ();
+}
+
+impl InsertPhysicalBody for CreatureHolder {
+    fn insert_physical_body(&mut self, parent: &mut EntityCommands) {
+        let physical_bundle = self.physic_bundle.take().unwrap();
+        parent.insert_bundle(physical_bundle);
+
+        // Specific groups depending on creature type
+        if self.is_player.0 {
+            parent.insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_2));
+        } else {
+            parent.insert(ActiveEvents::COLLISION_EVENTS); // Enable events to detect projectile events
+            parent.insert(CollisionGroups::new(
+                Group::GROUP_2,
+                Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3 | Group::GROUP_4,
+            ));
+        }
+    }
+}
+
+// ----------------
+//
+// Pbr Mesh Bundle
+trait SpawnSwordRangeColliderChild {
+    fn spawn_sword_range_collider_child(&self, parent: &mut EntityCommands) -> ();
+}
+
+impl SpawnSwordRangeColliderChild for CreatureHolder {
+    fn spawn_sword_range_collider_child(&self, cmds: &mut EntityCommands) {
+        cmds.add_children(|parent| {
+            if self.is_player.0 {
+                parent
+                    .spawn_bundle(TransformBundle::from(Transform {
+                        translation: Vec3::new(1.5, 0., 0.),
+                        rotation: Quat::from_rotation_z(PI / 2.),
+                        ..default()
+                    }))
+                    .insert(Collider::cone(2., 3.))
+                    .insert(Sensor)
+                    .insert(PlayerSwordRangeSensor)
+                    .insert(CollisionGroups::new(Group::GROUP_3, Group::GROUP_2));
+            }
+        })
+    }
+}
+
+// ----------------
+//
+// Pbr Mesh Bundle
+trait SpawnBodyMeshChild {
+    fn spawn_body_mesh_child(
+        &self,
+        parent: &mut EntityCommands,
+        meshes: &mut ResMut<Assets<Mesh>>,
+        materials: &mut ResMut<Assets<StandardMaterial>>,
+    ) -> ();
+}
+
+impl SpawnBodyMeshChild for CreatureHolder {
+    fn spawn_body_mesh_child(
+        &self,
+        cmds: &mut EntityCommands,
+        meshes: &mut ResMut<Assets<Mesh>>,
+        materials: &mut ResMut<Assets<StandardMaterial>>,
+    ) {
+        cmds.add_children(|parent| {
+            parent.spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Box::new(
+                    self.creature_type.size().x,
+                    self.creature_type.size().y,
+                    self.creature_type.size().z,
+                ))),
+                material: materials.add(self.creature_type.color().into()),
+                transform: Transform::from_xyz(0., 0., 0.),
+                ..default()
+            });
+        });
+    }
+}
+
+// ----------------
+//
+// Text Mesh Bundle
 trait SpawnHpsTextMeshChild {
     fn spawn_hp_text_mesh_child(
-        &mut self,
+        &self,
         parent: &mut EntityCommands,
         font: Handle<TextMeshFont>,
     ) -> ();
 }
 
 impl SpawnHpsTextMeshChild for CreatureHolder {
-    fn spawn_hp_text_mesh_child(&mut self, cmds: &mut EntityCommands, font: Handle<TextMeshFont>) {
+    fn spawn_hp_text_mesh_child(&self, cmds: &mut EntityCommands, font: Handle<TextMeshFont>) {
         cmds.add_children(|parent| {
             let mut children = parent.spawn_bundle(TextMeshBundle {
                 text_mesh: TextMesh::new_with_color("[hp]", font, Color::WHITE),
@@ -174,33 +344,16 @@ impl SpawnHpsTextMeshChild for CreatureHolder {
                 ..Default::default()
             });
 
-            children.insert(HpsDisplay);
-
-            self.ui.text_mesh_hp_entity = Some(children.id());
+            children.insert(HpsDisplay(100.));
         });
     }
 }
 
 trait UpdateHpsTextMesh {
-    fn update_hps(&mut self, text_mesh_q: &mut Query<&mut TextMesh, With<HpsDisplay>>) -> ();
-}
-
-impl UpdateHpsTextMesh for CreatureHolder {
-    fn update_hps(&mut self, text_mesh_q: &mut Query<&mut TextMesh, With<HpsDisplay>>) {
-        println!("Attempt to update hps {:?}", text_mesh_q.is_empty());
-
-        let mesh_entity = match self.ui.text_mesh_hp_entity {
-            Some(mesh) => mesh,
-            None => return,
-        };
-
-        match text_mesh_q.get_mut(mesh_entity) {
-            Ok(mut mesh) => mesh.text = String::from(format!("{}", self.stats.hp)),
-            Err(_) => {
-                error!("No text mesh for entity {:?}", mesh_entity)
-            }
-        };
-    }
+    fn update_hps(
+        creature_q: Query<&Stats, With<CreatureParent>>,
+        text_mesh_q: Query<(&Parent, &mut TextMesh), With<HpsDisplay>>,
+    ) -> ();
 }
 
 impl CreatureType {
@@ -247,266 +400,57 @@ fn spawn_creatures(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> () {
-    // add_creature(
-    //     &mut commands,
-    //     &mut meshes,
-    //     &mut materials,
-    //     &mut asset_server,
-    //     &mut texture_atlases,
-    //     true,
-    // );
-
-    // let mut creature_holder = CreatureHolder {
-    // spatial_bundle: SpatialBundle {
-    // transform: Transform::from_xyz(0., 0., 0.),
-    // ..default()
-    // },
-    // ui: UiHolder {
-    // text_mesh_hp_entity: None,
-    // },
-    // stats: Stats { atk: 1., hp: 100. },
-    // };
-
-    // Spawn SpatialBundle which will hold everything
-    let mut ent = commands.spawn_bundle(CreatureHolder {
-        spatial_bundle: SpatialBundle {
-            transform: Transform::from_xyz(0., 0., 0.),
-            ..default()
-        },
-        ui: UiHolder {
-            text_mesh_hp_entity: None,
-        },
-        stats: Stats { atk: 1., hp: 100. },
-    });
-
-    ent.insert(creature_holder);
-
-    creature_holder.init(
+    let creature_type = CreatureType::Human;
+    CreatureHolder::new(
+        creature_type.clone(),
+        Stats { atk: 1., hp: 100. },
+        IsPlayer(true),
+        CreaturePhysicBundle::new(creature_type, 0),
+    )
+    .init(
         &mut commands,
-        &mut ent,
         &mut meshes,
         &mut materials,
         &mut asset_server,
     );
-    return;
 
     for _ in 0..100 {
-        add_creature(
+        CreatureHolder::new(
+            CreatureType::Monster,
+            Stats { atk: 1., hp: 100. },
+            IsPlayer(false),
+            CreaturePhysicBundle::new(CreatureType::Monster, 0),
+        )
+        .init(
             &mut commands,
             &mut meshes,
             &mut materials,
             &mut asset_server,
-            &mut texture_atlases,
-            false,
         );
     }
 }
 
-fn add_creature(
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    asset_server: &mut Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
-    is_player: bool,
-) -> () {
-    let creature_type = match is_player {
-        true => CreatureType::Human,
-        false => CreatureType::Monster,
-    };
-
-    let dominance_group = match is_player {
-        true => 1,
-        false => 0,
-    };
-
-    // Setup the sprite sheet
-    let font: Handle<TextMeshFont> = asset_server.load("fonts/FiraSans-Medium.ttf#mesh");
-
-    // Spawn SpatialBundle which will hold everything
-    let mut ent = commands.spawn_bundle(SpatialBundle { ..default() });
-
-    // Add the Creature related stuff
-    ent.insert_bundle(CreatureBundle::new(
-        creature_type.clone(),
-        "Jbb".to_string(),
-        100.0,
-        creature_type.attack(),
-    ))
-    .insert(CreatureParent);
-
-    // Add specific Components depending on the creature type
-    if is_player {
-        ent.insert(PlayerParent);
-    } else {
-        ent.insert(MonsterParent);
-    }
-
-    // Add the creature physics bundle
-    ent.insert_bundle(TransformBundle::from_transform(
-        Transform::from_translation(RandVec3::new()),
-    ))
-    .insert(RigidBody::Dynamic)
-    .insert(LockedAxes::ROTATION_LOCKED)
-    .insert(Velocity {
-        linvel: Vec3::splat(0.),
-        angvel: Vec3::splat(0.),
-    })
-    .insert(Collider::cuboid(
-        creature_type.size().x / 2.,
-        creature_type.size().y / 2.,
-        creature_type.size().z / 2.,
-    ))
-    .insert(ColliderMassProperties::Density(2000.0))
-    .insert(Damping {
-        linear_damping: 1.,
-        ..default()
-    })
-    .insert(ExternalImpulse::default())
-    .insert(Dominance::group(dominance_group));
-
-    // Specific groups depending on creature type
-    if is_player {
-        ent.insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_2));
-    } else {
-        ent.insert(ActiveEvents::COLLISION_EVENTS); // Enable events to detect projectile events
-        ent.insert(CollisionGroups::new(
-            Group::GROUP_2,
-            Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3 | Group::GROUP_4,
-        ));
-    }
-
-    //
-    // Sword range collider
-    ent.with_children(|parent| {
-        if is_player {
-            let mut ent = parent.spawn();
-            ent.insert(Collider::cone(2., 3.))
-                .insert_bundle(TransformBundle::from(Transform {
-                    translation: Vec3::new(1.5, 0., 0.),
-                    rotation: Quat::from_rotation_z(PI / 2.),
-                    ..default()
-                }))
-                .insert(Sensor)
-                .insert(PlayerSwordRangeSensor)
-                .insert(CollisionGroups::new(Group::GROUP_3, Group::GROUP_2));
+// --------------
+//
+// Display HPs
+impl UpdateHpsTextMesh for HpsDisplay {
+    fn update_hps(
+        creature_q: Query<&Stats, With<CreatureParent>>,
+        mut text_mesh_q: Query<(&Parent, &mut TextMesh), With<HpsDisplay>>,
+    ) {
+        for (parent, mut text_mesh) in text_mesh_q.iter_mut() {
+            match creature_q.get(parent.get()) {
+                Ok(stats) => text_mesh.text = String::from(format!("{}", stats.hp)),
+                Err(_) => continue,
+            };
         }
-    })
-    //
-    // Add Creature
-    .with_children(|parent| {
-        let mut ent = parent.spawn_bundle(CreatureBundle::new(
-            creature_type.clone(),
-            "Jbb".to_string(),
-            100.0,
-            creature_type.attack(),
-        ));
-
-        if is_player {
-            ent.insert(Player);
-        } else {
-            ent.insert(Monster);
-            ent.insert(LastAttack(Timer::from_seconds(
-                MONSTER_ATTACK_COOLDOWN,
-                false,
-            )));
-        }
-    })
-    //
-    //Sword range
-    // .with_children(|parent| {
-    //     if is_player {
-    //         parent
-    //             .spawn_bundle(SpriteSheetBundle {
-    //                 texture_atlas: texture_atlas_handle.clone(),
-    //                 transform: Transform {
-    //                     scale: Vec2::splat(1. / PIXEL_PER_METER).extend(1.),
-    //                     ..default()
-    //                 },
-    //                 sprite: TextureAtlasSprite::new(0),
-    //                 ..Default::default()
-    //             })
-    //             .insert(PlayerSwordRange);
-    //     }
-    // })
-    //Sword range
-    // .with_children(|parent| {
-    //     if is_player {
-    //         parent
-    //             .spawn_bundle(PbrBundle {
-    //                 mesh: meshes.add(Mesh::from(shape::Box::new(
-    //                     creature_type.size().x,
-    //                     creature_type.size().y,
-    //                     creature_type.size().z,
-    //                 ))),
-    //                 material: materials.add(creature_type.color().into()),
-    //                 transform: Transform::from_xyz(0., 0., 0.),
-    //                 ..default()
-    //             })
-    //             .insert(PlayerSwordRange);
-    //     }
-    // })
-    //
-    // Add Sprite
-    .with_children(|parent| {
-        parent.spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(
-                creature_type.size().x,
-                creature_type.size().y,
-                creature_type.size().z,
-            ))),
-            material: materials.add(creature_type.color().into()),
-            transform: Transform::from_xyz(0., 0., 0.),
-            ..default()
-        });
-    })
-    //
-    // Text
-    .with_children(|parent| {
-        parent
-            .spawn_bundle(TextMeshBundle {
-                text_mesh: TextMesh::new_with_color("[hp]", font, Color::WHITE),
-                transform: Transform {
-                    translation: Vec3::new(-1., 1.75, 0.),
-                    scale: Vec3::splat(3.),
-                    ..default()
-                },
-                ..Default::default()
-            })
-            .insert(HpsDisplay);
-    });
-}
-
-fn get_child_hps(
-    children: &Children,
-    creatures_query: &Query<&Stats, With<Creature>>,
-) -> Option<f32> {
-    for &child in children.iter() {
-        match creatures_query.get(child) {
-            Ok(stats) => return Some(stats.hp),
-            Err(_) => None::<f32>,
-        };
-    }
-
-    None
-}
-
-fn display_hps_system(mut stats_q: Query<(&Stats, &mut TextMesh), With<Creature>>) {
-    for (stat, mut tex_mesh) in stats_q.iter_mut() {
-        tex_mesh.text = String::from(format!("{}", stat.hp));
     }
 }
-
-fn display_hps_system_clone(
-    mut creature_q: Query<(&mut CreatureHolder, Entity), With<Creature>>,
-    mut text_mesh_q: Query<&mut TextMesh, With<HpsDisplay>>,
+fn display_hps_system(
+    creature_q: Query<&Stats, With<CreatureParent>>,
+    text_mesh_q: Query<(&Parent, &mut TextMesh), With<HpsDisplay>>,
 ) {
-    for (mut creature, entity) in creature_q.iter_mut() {
-        // for mut child in children.iter_mut() {
-        creature.update_hps(&mut text_mesh_q);
-        // }
-        // tex_mesh.text = String::from(format!("{}", stat.hp));
-    }
+    HpsDisplay::update_hps(creature_q, text_mesh_q);
 }
 
 fn change_consciousness_system(
