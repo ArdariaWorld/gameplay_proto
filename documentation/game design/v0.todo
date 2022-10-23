@@ -80,7 +80,7 @@
 ✔ keep monster pushback when hit by arrow @started(22-10-16 18:01) @done(22-10-16 20:36) @lasted(2h35m3s)
 
 # 0.13
-[] convert the game into 3D game @started(22-10-19 16:51)
+✔ convert the game into 3D game @started(22-10-19 16:51) @done(22-10-23 14:47) @lasted(3d21h56m53s)
 ✔ init game with camera and light @started(22-10-19 16:51) @done(22-10-19 17:35) @lasted(44m22s)
 ✔ add a mesh to the floor @started(22-10-19 17:18) @done(22-10-19 17:35) @lasted(17m4s)
 ✔ add player and monsters @started(22-10-19 17:37) @done(22-10-19 18:01) @lasted(24m15s)
@@ -96,9 +96,12 @@
 
 # 0.14
 ✔ refacto combat module @started(22-10-22 20:56) @done(22-10-22 21:20) @lasted(24m9s)
-[] refacto population module
+
+# 0.15
+✔ display hp on top of creatures @started(22-10-23 13:02) @done(22-10-23 14:47) @lasted(1h45m49s)
 
 # Backlog
+[] refacto population module
 [] fix arrows colliding with ground (edit collision groups)
 [] split code in smaller modules
 [] fix mouse angle bug when resize window

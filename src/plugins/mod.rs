@@ -4,5 +4,5 @@ pub mod population;
 // pub mod hud;
 pub mod location;
 pub mod player;
-// pub mod ui;
+pub mod ui;
 // pub mod world;

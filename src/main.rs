@@ -10,6 +10,7 @@ use bevy_rapier3d::{
     prelude::{Collider, NoUserData, RapierPhysicsPlugin},
     render::RapierDebugRenderPlugin,
 };
+use bevy_text_mesh::TextMeshPlugin;
 use plugins::{
     camera::camera_follow_player,
     combat::combat_plugin::CombatPlugin,
@@ -19,6 +20,7 @@ use plugins::{
         player_plugin::PlayerPlugin,
     },
     population::PopulationPlugin,
+    ui::UiPlugin,
 };
 
 pub const CAMERA_VEC_OFFSET: f32 = 30.;
@@ -86,10 +88,10 @@ fn setup_physics(
     /* Create the ground. */
     commands
         .spawn()
-        .insert(Collider::cuboid(30.0, 0.1, 30.0))
+        .insert(Collider::cuboid(300.0, 0.1, 300.0))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, -2.0, 0.0)))
         .insert_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(60., 0.2, 60.))),
+            mesh: meshes.add(Mesh::from(shape::Box::new(600., 0.2, 600.))),
             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             transform: Transform::from_xyz(0., 0., 0.),
             ..default()
@@ -125,13 +127,14 @@ fn main() {
         .add_startup_system(setup_physics)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(TextMeshPlugin)
         .add_state(GameState::Playing)
         .add_plugin(PopulationPlugin)
         .add_system(camera_follow_player)
         .add_plugin(PlayerPlugin)
         .add_plugin(LocationPlugin)
         .add_plugin(CombatPlugin)
-        // .add_plugin(UiPlugin)
+        .add_plugin(UiPlugin)
         // .add_plugin(HudPlugin)
         .add_system(bevy::window::close_on_esc)
         .run();

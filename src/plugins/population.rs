@@ -11,6 +11,7 @@ use super::location::Location;
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
+use bevy_text_mesh::{TextMesh, TextMeshBundle, TextMeshFont};
 
 pub struct PopulationPlugin;
 impl Plugin for PopulationPlugin {
@@ -98,8 +99,14 @@ pub struct PlayerParent;
 #[derive(Component)]
 pub struct MonsterParent;
 
+#[derive(Component)]
+pub struct CreatureParent;
+
 #[derive(Component, Inspectable)]
 pub struct PlayerSwordRangeSensor;
+
+#[derive(Component)]
+pub struct CreatureHps(pub Entity);
 
 #[derive(Component)]
 pub struct PlayerSwordRange;
@@ -167,7 +174,8 @@ fn spawn_creatures(
         true,
     );
 
-    for _ in 0..10 {
+    // return;
+    for _ in 0..100 {
         add_creature(
             &mut commands,
             &mut meshes,
@@ -201,11 +209,14 @@ fn add_creature(
     let texture_handle = asset_server.load("images/hitZone.png");
     let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(300.0, 300.0), 1, 1);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
+    let font: Handle<TextMeshFont> = asset_server.load("fonts/FiraSans-Medium.ttf#mesh");
 
     let mut ent = commands.spawn_bundle(SpatialBundle {
         transform: Transform::from_xyz(0., 0., 0.),
         ..default()
     });
+
+    ent.insert(CreatureParent);
 
     if is_player {
         ent.insert(PlayerParent);
@@ -335,31 +346,71 @@ fn add_creature(
         });
     })
     //
-    // Add Text
+    // Text
     .with_children(|parent| {
         parent
-            .spawn_bundle(Text2dBundle {
-                text: Text::from_section(
-                    100.0.to_string(),
-                    TextStyle {
-                        font_size: 40.0,
-                        color: Color::WHITE,
-                        font: asset_server.load("fonts/FiraCode-Bold.ttf"),
-                    },
-                ),
+            .spawn_bundle(TextMeshBundle {
+                text_mesh: TextMesh::new_with_color("[hp]", font, Color::WHITE),
                 transform: Transform {
-                    translation: Vec3::new(
-                        -creature_type.size().x / 2. - 0.1,
-                        creature_type.size().y,
-                        0.,
-                    ),
-                    scale: Vec2::splat(PIXEL_SCALE).extend(1.),
+                    translation: Vec3::new(-1., 1.75, 0.),
+                    scale: Vec3::splat(3.),
                     ..default()
                 },
-                ..default()
+                ..Default::default()
             })
             .insert(HpsDisplay);
+        // parent.spawn_bundle(NodeBundle { ..default() });
+        // parent.spawn_bundle(
+        //     // Create a TextBundle that has a Text with a single section.
+        //     TextBundle::from_section(
+        //         // Accepts a `String` or any type that converts into a `String`, such as `&str`
+        //         "hello\nbevy!",
+        //         TextStyle {
+        //             font: asset_server.load("fonts/FiraCode-Bold.ttf"),
+        //             font_size: 100.0,
+        //             color: Color::WHITE,
+        //         },
+        //     ) // Set the alignment of the Text
+        //     .with_text_alignment(TextAlignment::TOP_CENTER)
+        //     // Set the style of the TextBundle itself.
+        //     .with_style(Style {
+        //         align_self: AlignSelf::FlexEnd,
+        //         position_type: PositionType::Absolute,
+        //         position: UiRect {
+        //             bottom: Val::Px(5.0),
+        //             right: Val::Px(15.0),
+        //             ..default()
+        //         },
+        //         ..default()
+        //     }),
+        // );
     });
+    //
+    // Add Text
+    // .with_children(|parent| {
+    //     parent
+    //         .spawn_bundle(Text2dBundle {
+    //             text: Text::from_section(
+    //                 100.0.to_string(),
+    //                 TextStyle {
+    //                     font_size: 40.0,
+    //                     color: Color::WHITE,
+    //                     font: asset_server.load("fonts/FiraCode-Bold.ttf"),
+    //                 },
+    //             ),
+    //             transform: Transform {
+    //                 translation: Vec3::new(
+    //                     -creature_type.size().x / 2. - 0.1,
+    //                     creature_type.size().y,
+    //                     0.,
+    //                 ),
+    //                 scale: Vec2::splat(PIXEL_SCALE).extend(1.),
+    //                 ..default()
+    //             },
+    //             ..default()
+    //         })
+    //         .insert(HpsDisplay);
+    // });
 }
 
 fn get_child_hps(
@@ -377,19 +428,17 @@ fn get_child_hps(
 }
 
 fn display_hps_system(
-    entity_query: Query<(Entity, &Children)>,
-    creatures_query: Query<&Stats, With<Creature>>,
-    mut hps_display_query: Query<&mut Text, With<HpsDisplay>>,
+    creatures_q: Query<&Children, With<CreatureParent>>,
+    mut text_q: Query<&mut TextMesh, With<HpsDisplay>>,
+    stats_q: Query<&Stats, With<Creature>>,
 ) {
-    // get the event
-    for (_, children) in entity_query.iter() {
-        if let Some(hps) = get_child_hps(&children, &creatures_query) {
-            for &child in children.iter() {
-                match hps_display_query.get_mut(child) {
-                    Ok(mut text) => {
-                        text.sections[0].value = format!("{}", hps);
-                    }
-                    Err(_) => (),
+    for children in creatures_q.iter() {
+        if let Some(hps) = get_child_hps(&children, &stats_q) {
+            for &child in children {
+                let hps_string = String::from(format!("{}", hps));
+                match text_q.get_mut(child) {
+                    Ok(mut text_mesh) => text_mesh.text = hps_string,
+                    Err(_) => continue,
                 };
             }
         }

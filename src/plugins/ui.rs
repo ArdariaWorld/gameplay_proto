@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::GameState;
 
-use super::player::RespawnPlayerEvent;
+use super::player::player_events::RespawnPlayerEvent;
 
 #[derive(Component)]
 pub struct Button;
