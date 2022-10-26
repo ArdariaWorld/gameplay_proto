@@ -1,7 +1,10 @@
 use crate::{
     plugins::{
         combat::combat_events::{HitMonsterEvent, KillMonsterEvent},
-        population::*,
+        creature::{
+            creature_plugin::{Monster, Player},
+            systems::stats::{BrainState, ConsciousnessStateEnum, Stats},
+        },
     },
     MONSTER_HIT_IMPULSE,
 };

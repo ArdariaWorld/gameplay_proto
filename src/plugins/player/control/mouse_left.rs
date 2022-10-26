@@ -5,11 +5,9 @@ use bevy::{
 use bevy_rapier3d::prelude::*;
 
 use crate::{
-    plugins::{
-        combat::combat_events::HitMonsterEvent,
-        population::{
-            MonsterParent, Player, PlayerParent, PlayerSwordRange, PlayerSwordRangeSensor,
-        },
+    plugins::creature::{
+        creature_plugin::{Monster, Player},
+        systems::sensors::PlayerSwordRangeSensor,
     },
     utils::error::ErrorMessage,
 };
@@ -17,16 +15,9 @@ use crate::{
 pub fn mouse_left_click_system(
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
     rapier_context: Res<RapierContext>,
-    q_monster: Query<Entity, (With<MonsterParent>, Without<Player>)>,
-    q_player: Query<&Transform, With<PlayerParent>>,
-    collider_query: Query<
-        Entity,
-        (
-            With<Collider>,
-            With<PlayerSwordRangeSensor>,
-            Without<PlayerSwordRange>,
-        ),
-    >,
+    q_monster: Query<Entity, (With<Monster>, Without<Player>)>,
+    q_player: Query<&Transform, With<Player>>,
+    collider_query: Query<Entity, (With<Collider>, With<PlayerSwordRangeSensor>)>,
 ) {
     let mut closure = || {
         for event in mouse_button_input_events.iter() {

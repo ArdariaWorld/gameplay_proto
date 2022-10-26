@@ -2,9 +2,12 @@ use bevy::prelude::*;
 
 use crate::{
     plugins::{
+        creature::{
+            creature_plugin::{Monster, Player},
+            systems::stats::{LastAttack, Stats},
+        },
         location::Location,
         player::player_events::KillPlayerEvent,
-        population::{LastAttack, Monster, Player, Stats},
     },
     MONSTER_MAX_RANGE,
 };

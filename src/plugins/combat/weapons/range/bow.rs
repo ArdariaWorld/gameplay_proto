@@ -3,7 +3,7 @@ use bevy_rapier3d::prelude::*;
 
 use crate::plugins::{
     combat::{combat_events::FireProjectileEvent, combat_plugin::Projectile},
-    population::PlayerParent,
+    creature::creature_plugin::Player,
 };
 
 pub fn fire_projectile_system(
@@ -11,7 +11,7 @@ pub fn fire_projectile_system(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut ev_fire_projectile: EventReader<FireProjectileEvent>,
-    q_player: Query<&Transform, With<PlayerParent>>,
+    q_player: Query<&Transform, With<Player>>,
 ) {
     for ev in ev_fire_projectile.iter() {
         let player_transform = q_player.get_single().expect("No Player found");

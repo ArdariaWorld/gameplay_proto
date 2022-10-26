@@ -1,6 +1,6 @@
 pub mod camera;
 pub mod combat;
-pub mod population;
+pub mod creature;
 // pub mod hud;
 pub mod location;
 pub mod player;

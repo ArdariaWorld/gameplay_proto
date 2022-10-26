@@ -6,12 +6,12 @@ use bevy::{
 };
 use bevy_mod_raycast::Intersection;
 
-use crate::plugins::population::PlayerParent;
+use crate::plugins::creature::creature_plugin::Player;
 
 use super::mouse::MouseRaycastSet;
 
 pub fn mouse_move_system(
-    mut q_player: Query<&mut Transform, With<PlayerParent>>,
+    mut q_player: Query<&mut Transform, With<Player>>,
     mouse_pos_q: Query<&Intersection<MouseRaycastSet>>,
     mut mouse_motion_events: EventReader<MouseMotion>,
 ) {

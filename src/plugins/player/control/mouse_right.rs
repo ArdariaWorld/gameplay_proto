@@ -1,10 +1,8 @@
 use bevy::{
     input::{mouse::MouseButtonInput, ButtonState},
-    prelude::{EventReader, EventWriter, MouseButton, Query},
+    prelude::{EventReader, MouseButton, Query},
 };
 use bevy_mod_raycast::Intersection;
-
-use crate::plugins::combat::combat_events::FireProjectileEvent;
 
 use super::mouse::MouseRaycastSet;
 
