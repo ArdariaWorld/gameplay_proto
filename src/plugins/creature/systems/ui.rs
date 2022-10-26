@@ -67,6 +67,5 @@ pub fn display_hps_system(
     creature_q: Query<&Stats, With<CreatureEntity>>,
     text_mesh_q: Query<(&Parent, &mut TextMesh), With<HpsDisplay>>,
 ) {
-    println!("{:?}", creature_q.is_empty());
     HpsDisplay::update_hps(creature_q, text_mesh_q);
 }

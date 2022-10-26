@@ -4,7 +4,7 @@ use bevy_rapier3d::prelude::Velocity;
 use crate::{utils::error::ErrorMessage, GameState};
 
 use super::creature::{
-    creature_plugin::{Creature, Monster, Player},
+    creature_plugin::{CreatureType, Monster, Player},
     systems::stats::{BrainState, ConsciousnessStateEnum},
 };
 
@@ -36,25 +36,30 @@ impl Plugin for LocationPlugin {
 fn location_system(
     time: Res<Time>,
     mut creatures_query: Query<
-        (&Parent, &mut Location, &BrainState, &Creature),
+        (
+            &Transform,
+            &mut Velocity,
+            &mut Location,
+            &BrainState,
+            &CreatureType,
+        ),
         (With<Monster>, Without<Player>),
     >,
-    mut q_parent: Query<(&Transform, &mut Velocity)>,
 ) {
     let mut closure = || {
-        for (parent_entity, mut location, brain_state, creature) in creatures_query.iter_mut() {
+        for (transform, mut velocity, mut location, brain_state, creature_type) in
+            creatures_query.iter_mut()
+        {
             // Get entity position
-            let (translation, mut velocity) = q_parent.get_mut(parent_entity.get())?;
-
             // Update location from parent translation
-            let creature_position = translation.translation;
+            let creature_position = transform.translation;
             location.position = Some(creature_position);
 
             if let Some(destination) = location.destination {
                 // if transform.translation is close enough to destination, remove destination
                 if destination.abs_diff_eq(
                     creature_position,
-                    creature.creature_type.speed() * time.delta_seconds(),
+                    creature_type.speed() * time.delta_seconds(),
                 ) {
                     location.destination = None;
                     velocity.linvel = Vec3::new(0., 0., 0.);
@@ -64,7 +69,7 @@ fn location_system(
                 // Get normalized vector to destination
                 let direction = (destination - creature_position).normalize();
                 if brain_state.conscious == ConsciousnessStateEnum::Awake {
-                    velocity.linvel = direction * creature.creature_type.speed();
+                    velocity.linvel = direction * creature_type.speed();
                 }
             } else {
                 velocity.linvel = Vec3::new(0., 0., 0.);
@@ -75,17 +80,15 @@ fn location_system(
     };
 
     if let Err(error) = closure() {
-        println!("Error while handling click: {}", error);
+        println!("Error while location_system: {}", error);
     }
 }
 
 fn update_player_location_from_translation(
-    mut q_parent: Query<&Transform>,
-    mut player_query: Query<(&Parent, &mut Location), With<Player>>,
+    mut player_query: Query<(&Transform, &mut Location), With<Player>>,
 ) {
     let mut closure = || {
-        let (player_parent, mut location) = player_query.get_single_mut()?;
-        let transform = q_parent.get_mut(player_parent.get())?;
+        let (transform, mut location) = player_query.get_single_mut()?;
 
         location.position = Some(transform.translation);
 
@@ -93,7 +96,10 @@ fn update_player_location_from_translation(
     };
 
     if let Err(error) = closure() {
-        println!("Error while handling click: {}", error);
+        println!(
+            "Error while update_player_location_from_translation: {}",
+            error
+        );
     }
 }
 

@@ -15,6 +15,7 @@ pub fn projectile_collision_system(
                 let entity_1 = commands.entity(*entity_1_ref).id();
                 let entity_2 = commands.entity(*entity_2_ref).id();
 
+                // Projectile should react only with monsters (see CollisionGroups) so other entity is always a monster
                 let (projectile_entity, monster_entity) = match q_projectile.get(entity_1) {
                     Ok(_) => (entity_1, entity_2),
                     Err(_) => match q_projectile.get(entity_2) {

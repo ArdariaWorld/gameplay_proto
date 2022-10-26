@@ -30,7 +30,10 @@ pub fn wasd_movement(
             velocity_vector.z = 1.;
         }
 
-        velocity.linvel = velocity_vector * HUMAN_STEP_DISTANCE;
+        if velocity_vector.length() > 0. {
+            velocity.linvel = velocity_vector.normalize() * HUMAN_STEP_DISTANCE;
+        }
+
         // println!("Linear velocity is {:?}", velocity.linvel);
         Ok::<(), ErrorMessage>(())
     };

@@ -14,18 +14,18 @@ use bevy_rapier3d::prelude::*;
 // Player hit a monster
 pub fn monster_hit_system(
     mut commands: Commands,
-    mut entity_query: Query<(Entity, &Children)>,
-    mut monsters_query: Query<
-        (&Parent, &mut Stats, &mut BrainState),
+
+    mut monsters_q: Query<
+        (&mut Stats, &mut BrainState, &mut ExternalImpulse),
         (With<Monster>, Without<Player>),
     >,
-    mut q_monster_parent: Query<&mut ExternalImpulse, With<Collider>>,
-    player_query: Query<&Stats, With<Player>>,
+    player_q: Query<&Stats, (With<Player>, Without<Monster>)>,
+
     mut ev_hit_monster: EventReader<HitMonsterEvent>,
     mut ev_kill_monster: EventWriter<KillMonsterEvent>,
 ) {
     // Get player stats
-    let player_stats = match player_query.get_single() {
+    let player_stats = match player_q.get_single() {
         Ok(stats) => stats,
         Err(_) => return,
     };
@@ -33,47 +33,33 @@ pub fn monster_hit_system(
     for ev in ev_hit_monster.iter() {
         println!("event hit monster");
 
-        let (entity, children) = match entity_query.get_mut(ev.0) {
-            Ok(result) => result,
-            Err(e) => {
-                println!("Error entity not found {:?}", e);
-                continue;
-            }
+        let (mut stats, mut brain_state, mut external_impulse) = match monsters_q.get_mut(ev.0) {
+            Ok(tupl) => tupl,
+            Err(_) => return,
         };
 
-        for &child in children.iter() {
-            match monsters_query.get_mut(child) {
-                Ok((parent, mut stats, mut brain_state)) => {
-                    let mut external_impulse = q_monster_parent
-                        .get_mut(parent.get())
-                        .expect("No creature external impulse");
+        println!(
+            "Applied impulse vector {:?}",
+            Vec2::from_angle(ev.1).normalize()
+        );
 
-                    println!(
-                        "Applied impulse vector {:?}",
-                        Vec2::from_angle(ev.1).normalize()
-                    );
+        let vec_destination = Vec2::from_angle(ev.1).normalize();
+        let looking_at = Vec3::new(vec_destination.x, 1., vec_destination.y);
+        let impulse = Transform::default()
+            .looking_at(looking_at, Vec3::ZERO)
+            .translation
+            * MONSTER_HIT_IMPULSE;
 
-                    let vec_destination = Vec2::from_angle(ev.1).normalize();
-                    let looking_at = Vec3::new(vec_destination.x, 1., vec_destination.y);
-                    let impulse = Transform::default()
-                        .looking_at(looking_at, Vec3::ZERO)
-                        .translation
-                        * MONSTER_HIT_IMPULSE;
+        external_impulse.impulse = impulse;
+        stats.hp -= player_stats.atk;
 
-                    external_impulse.impulse = impulse;
-                    stats.hp -= player_stats.atk;
+        brain_state.conscious = ConsciousnessStateEnum::Stun;
+        brain_state.stun_at.reset();
 
-                    brain_state.conscious = ConsciousnessStateEnum::Stun;
-                    brain_state.stun_at.reset();
-
-                    if stats.hp <= 0. {
-                        ev_kill_monster.send(KillMonsterEvent(entity));
-                        brain_state.conscious = ConsciousnessStateEnum::Ko;
-                        commands.entity(entity).despawn_recursive();
-                    }
-                }
-                Err(_) => (),
-            };
+        if stats.hp <= 0. {
+            ev_kill_monster.send(KillMonsterEvent(ev.0));
+            brain_state.conscious = ConsciousnessStateEnum::Ko;
+            commands.entity(ev.0).despawn_recursive();
         }
     }
 }
