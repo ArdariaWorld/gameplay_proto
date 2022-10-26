@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use crate::{
     plugins::{
+        creature::creature_plugin::{Monster, Player},
         location::Location,
-        population::{Monster, Player},
     },
     MONSTER_AGGRO_DISTANCE,
 };

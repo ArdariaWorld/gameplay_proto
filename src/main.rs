@@ -13,6 +13,7 @@ use bevy_rapier3d::{
 use bevy_text_mesh::TextMeshPlugin;
 use plugins::{
     camera::camera_follow_player,
+    creature::creature_plugin::CreaturePlugin,
     combat::combat_plugin::CombatPlugin,
     items::items_plugin::ItemsPlugin,
     location::LocationPlugin,
@@ -20,7 +21,6 @@ use plugins::{
         control::mouse::{update_raycast_with_cursor, MouseRaycastSet},
         player_plugin::PlayerPlugin,
     },
-    population::PopulationPlugin,
     ui::UiPlugin,
 };
 
@@ -132,13 +132,12 @@ fn main() {
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(TextMeshPlugin)
         .add_state(GameState::Playing)
-        .add_plugin(PopulationPlugin)
-        .add_system(camera_follow_player)
+        .add_plugin(CreaturePlugin)
         .add_plugin(PlayerPlugin)
-        .add_plugin(LocationPlugin)
-        .add_plugin(CombatPlugin)
-        .add_plugin(UiPlugin)
-        .add_plugin(ItemsPlugin)
+        .add_system(camera_follow_player)
+        // .add_plugin(LocationPlugin)
+        // .add_plugin(CombatPlugin)
+        // .add_plugin(UiPlugin)
         // .add_plugin(HudPlugin)
         .add_system(bevy::window::close_on_esc)
         .run();

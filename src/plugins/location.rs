@@ -3,7 +3,10 @@ use bevy_rapier3d::prelude::Velocity;
 
 use crate::{utils::error::ErrorMessage, GameState};
 
-use super::population::{BrainState, ConsciousnessStateEnum, Creature, Monster, Player};
+use super::creature::{
+    creature_plugin::{Creature, Monster, Player},
+    systems::stats::{BrainState, ConsciousnessStateEnum},
+};
 
 #[derive(Default, Component, Debug)]
 pub struct Location {
@@ -49,9 +52,10 @@ fn location_system(
 
             if let Some(destination) = location.destination {
                 // if transform.translation is close enough to destination, remove destination
-                if destination
-                    .abs_diff_eq(creature_position, creature.0.speed() * time.delta_seconds())
-                {
+                if destination.abs_diff_eq(
+                    creature_position,
+                    creature.creature_type.speed() * time.delta_seconds(),
+                ) {
                     location.destination = None;
                     velocity.linvel = Vec3::new(0., 0., 0.);
                     return Ok(());
@@ -60,7 +64,7 @@ fn location_system(
                 // Get normalized vector to destination
                 let direction = (destination - creature_position).normalize();
                 if brain_state.conscious == ConsciousnessStateEnum::Awake {
-                    velocity.linvel = direction * creature.0.speed();
+                    velocity.linvel = direction * creature.creature_type.speed();
                 }
             } else {
                 velocity.linvel = Vec3::new(0., 0., 0.);
@@ -95,10 +99,7 @@ fn update_player_location_from_translation(
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        plugins::{location::Location, population::Creature},
-        *,
-    };
+    // use crate::{plugins::location::Location, *};
 
     // #[test]
     // fn did_update_sprite_transforms() {

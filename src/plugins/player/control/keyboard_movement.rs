@@ -1,16 +1,16 @@
-use bevy::prelude::{Input, KeyCode, Parent, Query, Res, Vec3, With};
+use bevy::prelude::{Input, KeyCode, Query, Res, Vec3, With};
 use bevy_rapier3d::prelude::Velocity;
 
-use crate::{plugins::population::Player, utils::error::ErrorMessage, HUMAN_STEP_DISTANCE};
+use crate::{
+    plugins::creature::creature_plugin::Player, utils::error::ErrorMessage, HUMAN_STEP_DISTANCE,
+};
 
 pub fn wasd_movement(
     keyboard_input: Res<Input<KeyCode>>,
-    mut q_parent: Query<&mut Velocity>,
-    player_query: Query<&Parent, With<Player>>,
+    mut q_parent: Query<&mut Velocity, With<Player>>,
 ) {
     let mut closure = || {
-        let player_parent = player_query.get_single()?;
-        let mut velocity = q_parent.get_mut(player_parent.get())?;
+        let mut velocity = q_parent.get_single_mut()?;
 
         let mut velocity_vector = Vec3::splat(0.);
 
