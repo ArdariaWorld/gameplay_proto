@@ -57,6 +57,14 @@ enum GameState {
     GameOver,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemLabel)]
+pub enum SystemsLabel {
+    /// everything that handles input
+    Creatures,
+    /// everything that updates player state
+    Items,
+}
+
 // fn setup_rapier(mut rapier_config: ResMut<RapierConfiguration>) {
 //     // Set gravity to x and spawn camera.
 //     rapier_config.gravity = Vec2::new(0.0, 0.0);
@@ -138,6 +146,7 @@ fn main() {
         .add_plugin(LocationPlugin)
         .add_plugin(CombatPlugin)
         .add_plugin(UiPlugin)
+        .add_plugin(ItemsPlugin)
         // .add_plugin(HudPlugin)
         .add_system(bevy::window::close_on_esc)
         .run();

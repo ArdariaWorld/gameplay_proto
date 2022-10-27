@@ -2,11 +2,16 @@ use bevy::prelude::*;
 use bevy_text_mesh::TextMeshFont;
 
 use crate::{
-    plugins::location::Location, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK,
-    MONSTER_MAX_RANGE, MONSTER_STEP_DISTANCE,
+    plugins::{
+        items::items_plugin::{Inventory, InventoryBundle},
+        location::Location,
+    },
+    SystemsLabel, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK, MONSTER_MAX_RANGE,
+    MONSTER_STEP_DISTANCE,
 };
 
 use super::systems::{
+    inventory::SpawnInventoryChildBundle,
     physical::{CreaturePhysicBundle, InsertPhysicalBody},
     sensors::SpawnSwordRangeColliderChild,
     stats::{change_consciousness_system, BrainState, CreatureName, Stats},
@@ -17,9 +22,13 @@ use super::systems::{
 pub struct CreaturePlugin;
 impl Plugin for CreaturePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_creatures)
-            .add_system(display_hps_system)
-            .add_system(change_consciousness_system);
+        app.add_startup_system(
+            spawn_creatures
+                .label(SystemsLabel::Creatures)
+                .before(SystemsLabel::Items),
+        )
+        .add_system(display_hps_system)
+        .add_system(change_consciousness_system);
     }
 }
 
@@ -30,6 +39,7 @@ pub struct Creature {
     pub brain_state: BrainState,
     pub name: CreatureName,
     pub location: Location,
+    pub inventory: Inventory,
 }
 
 impl Creature {
@@ -38,8 +48,7 @@ impl Creature {
             creature_type,
             stats,
             name,
-            brain_state: BrainState::new(),
-            location: Location::new(),
+            ..default()
         }
     }
 }
@@ -158,6 +167,8 @@ impl CreatureConstructor {
             parent.insert(Monster);
         }
 
+        parent.insert_bundle(InventoryBundle::new());
+
         // Add Physical body
         self.insert_physical_body(&mut parent);
 
@@ -165,6 +176,7 @@ impl CreatureConstructor {
         self.spawn_sword_range_collider_child(&mut parent);
         self.spawn_hp_text_mesh_child(&mut parent, font);
         self.spawn_body_mesh_child(&mut parent, meshes, materials);
+        // self.spawn_inventory_bundle(&mut parent);
     }
 }
 
@@ -189,6 +201,7 @@ fn spawn_creatures(
         &mut asset_server,
     );
 
+    return;
     // Spawn monsters
     for _ in 0..100 {
         CreatureConstructor::new(

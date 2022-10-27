@@ -1,3 +1,4 @@
+pub mod keyboard_actions;
 pub mod keyboard_movement;
 pub mod mouse;
 pub mod mouse_left;
