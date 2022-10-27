@@ -1,7 +1,8 @@
 use crate::plugins::{
     creature::creature_plugin::Creature,
     items::items_plugin::{
-        ActivationTimer, EquipItemEvent, EquippedItem, Inventory, Item, ItemType, PickUpItemEvent,
+        EquipItemEvent, EquippedItem, Inventory, Item, ItemMesh, ItemType, PickUpItemEvent,
+        VisualItem,
     },
 };
 use bevy::prelude::*;
@@ -15,14 +16,15 @@ use bevy::prelude::*;
 ///
 pub fn equip_item_system(
     mut commands: Commands,
-    creature_q: Query<(Entity, &Inventory), With<Creature>>,
+    mut creature_q: Query<(Entity, &Inventory, &mut EquippedItem), With<Creature>>,
     item_q: Query<&Item>,
     mut ev_equip_item: EventReader<EquipItemEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for ev in ev_equip_item.iter() {
-        let (entity, inventory) = creature_q.get(ev.0).expect("No creature found");
+        let (creature_entity, inventory, mut equipped_item) =
+            creature_q.get_mut(ev.0).expect("No creature found");
 
         println!("inventory found");
 
@@ -31,18 +33,27 @@ pub fn equip_item_system(
             .get(item_entity.clone())
             .expect("Cant find given item entity");
 
-        // Add holder entity reference in EquippedItem ?
-        // commands.entity(*item_entity).insert(EquippedItem);
+        if let Some(mut item) = equipped_item.0 {
+            println!("Item already equipped");
+            continue;
+        }
 
         // Add EquippedItem component to inventory with Item entity reference
-
-        commands.entity(entity).add_children(|parent| {
-            parent.spawn_bundle(PbrBundle {
-                mesh: meshes.add(item.item_type.mesh()),
-                material: materials.add(item.item_type.color().into()),
-                transform: Transform::from_xyz(1., 0., 0.5),
-                ..default()
+        // And spawn pbr bundle
+        commands.entity(creature_entity).add_children(|parent| {
+            let mut child = parent.spawn_bundle(VisualItem {
+                mesh: PbrBundle {
+                    mesh: meshes.add(item.item_type.mesh()),
+                    material: materials.add(item.item_type.color().into()),
+                    transform: Transform::from_xyz(1., 0., 0.5),
+                    ..default()
+                },
+                animation_timer: item.item_type.animation_timer(),
             });
+
+            child.insert(ItemMesh);
+
+            equipped_item.0 = Some(child.id());
         });
     }
 }

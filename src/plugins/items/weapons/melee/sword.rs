@@ -17,7 +17,7 @@ pub fn create_sword(
         .spawn()
         .insert(Item {
             item_type: ItemType::Sword,
-            activation_timer: ActivationTimer(Timer::from_seconds(SWORD_SLASH_TIME, false)),
+            cooldown_timer: ActivationTimer(Timer::from_seconds(SWORD_SLASH_TIME, false)),
             // pbr_bundle: PbrBundle {
             //     mesh: meshes.add(Mesh::from(shape::Box::new(0.2, 1.3, 0.2))),
             //     material: materials.add(Color::PURPLE.into()),

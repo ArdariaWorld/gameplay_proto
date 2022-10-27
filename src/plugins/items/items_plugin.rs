@@ -5,12 +5,12 @@ use super::{
         equip_item::{
             display_equiped_item, equip_item_system, pickup_item_system, unequip_item_system,
         },
-        update_items::update_items_system,
+        update_items::{animate_items_system, start_items_animation_system},
     },
     weapons::melee::sword::slash_sword,
 };
 
-use bevy::prelude::*;
+use bevy::{ecs::bundle, prelude::*};
 
 // Equip an ItemBundle on a specific Entity
 pub struct EquipItemEvent(pub Entity);
@@ -32,10 +32,14 @@ impl Plugin for ItemsPlugin {
             .add_system(pickup_item_system)
             .add_system(equip_item_system)
             .add_system(unequip_item_system)
-            .add_system(update_items_system)
-            .add_system(display_equiped_item);
+            .add_system(start_items_animation_system)
+            .add_system(display_equiped_item)
+            .add_system(animate_items_system);
     }
 }
+
+#[derive(Default, Component)]
+pub struct ItemMesh;
 
 #[derive(Default, Component)]
 pub enum ItemType {
@@ -59,10 +63,17 @@ impl ItemType {
         }
     }
 
-    pub fn activation_timer(&self) -> f32 {
+    pub fn animation_timer(&self) -> AnimationTimer {
         match self {
-            ItemType::Sword => SWORD_SLASH_TIME,
-            ItemType::Shovel => SWORD_SLASH_TIME,
+            ItemType::Sword => AnimationTimer(Timer::from_seconds(SWORD_SLASH_TIME, false)),
+            ItemType::Shovel => AnimationTimer(Timer::from_seconds(SWORD_SLASH_TIME, false)),
+        }
+    }
+
+    pub fn cooldown_timer(&self) -> ActivationTimer {
+        match self {
+            ItemType::Sword => ActivationTimer(Timer::from_seconds(SWORD_SLASH_TIME, false)),
+            ItemType::Shovel => ActivationTimer(Timer::from_seconds(SWORD_SLASH_TIME, false)),
         }
     }
 }
@@ -70,20 +81,33 @@ impl ItemType {
 #[derive(Default, Component)]
 pub struct ActivationTimer(pub Timer);
 
+#[derive(Default, Component)]
+pub struct AnimationTimer(pub Timer);
+
 #[derive(Component, Default)]
 pub struct Item {
     pub item_type: ItemType,
-    pub activation_timer: ActivationTimer,
+    pub cooldown_timer: ActivationTimer,
 }
+
+#[derive(Bundle, Component, Default)]
+pub struct VisualItem {
+    #[bundle]
+    pub mesh: MaterialMeshBundle<StandardMaterial>,
+    pub animation_timer: AnimationTimer,
+}
+
+#[derive(Component, Default)]
+pub struct AnimateVisualItem;
 
 impl Item {
     fn primary(&mut self) -> () {
-        self.activation_timer.0.reset();
+        self.cooldown_timer.0.reset();
         // insert Animate Component
     }
 
     fn activate(&mut self) -> () {
-        self.activation_timer.0.reset();
+        self.cooldown_timer.0.reset();
     }
 }
 
@@ -111,8 +135,8 @@ impl EquipItem for Item {
     }
 }
 
-#[derive(Component)]
-pub struct EquippedItem;
+#[derive(Component, Default)]
+pub struct EquippedItem(pub Option<Entity>);
 
 #[derive(Component)]
 pub struct DroppedItem(pub Entity);

@@ -3,7 +3,7 @@ use bevy_text_mesh::TextMeshFont;
 
 use crate::{
     plugins::{
-        items::items_plugin::{Inventory, InventoryBundle},
+        items::items_plugin::{EquippedItem, Inventory, InventoryBundle},
         location::Location,
     },
     SystemsLabel, HUMAN_ATK, HUMAN_MAX_RANGE, HUMAN_STEP_DISTANCE, MONSTER_ATK, MONSTER_MAX_RANGE,
@@ -39,6 +39,7 @@ pub struct CreatureBundle {
     pub name: CreatureName,
     pub location: Location,
     pub inventory: Inventory,
+    pub equipped_item: EquippedItem,
 }
 
 impl CreatureBundle {
