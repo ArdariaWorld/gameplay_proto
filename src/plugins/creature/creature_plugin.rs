@@ -11,7 +11,6 @@ use crate::{
 };
 
 use super::systems::{
-    inventory::SpawnInventoryChildBundle,
     physical::{CreaturePhysicBundle, InsertPhysicalBody},
     sensors::SpawnSwordRangeColliderChild,
     stats::{change_consciousness_system, BrainState, CreatureName, Stats},
@@ -33,7 +32,7 @@ impl Plugin for CreaturePlugin {
 }
 
 #[derive(Bundle, Component, Default)]
-pub struct Creature {
+pub struct CreatureBundle {
     pub creature_type: CreatureType,
     pub stats: Stats,
     pub brain_state: BrainState,
@@ -42,7 +41,7 @@ pub struct Creature {
     pub inventory: Inventory,
 }
 
-impl Creature {
+impl CreatureBundle {
     pub fn new(creature_type: CreatureType, stats: Stats, name: CreatureName) -> Self {
         Self {
             creature_type,
@@ -54,7 +53,7 @@ impl Creature {
 }
 
 #[derive(Component)]
-pub struct CreatureEntity;
+pub struct Creature;
 
 #[derive(Component)]
 pub struct Monster;
@@ -152,10 +151,10 @@ impl CreatureConstructor {
             ..default()
         });
 
-        parent.insert(CreatureEntity);
+        parent.insert(Creature);
 
         // Insert base components
-        parent.insert_bundle(Creature::new(
+        parent.insert_bundle(CreatureBundle::new(
             self.creature_type,
             self.stats,
             self.name.clone(),

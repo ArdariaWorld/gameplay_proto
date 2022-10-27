@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::plugins::{
     creature::creature_plugin::Player,
-    items::items_plugin::{Item, ItemType, PickUpItemEvent},
+    items::items_plugin::{ItemBundle, ItemType, PickUpItemEvent},
 };
 
 /**
@@ -13,7 +13,7 @@ pub fn dev_init_items_system(
     player_q: Query<Entity, With<Player>>,
     mut ev_pickup_item: EventWriter<PickUpItemEvent>,
 ) {
-    let item = commands.spawn_bundle(Item {
+    let item = commands.spawn_bundle(ItemBundle {
         item_type: ItemType::Sword,
         ..default()
     });

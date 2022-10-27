@@ -1,8 +1,7 @@
-use crate::{SystemsLabel, SWORD_SLASH_TIME};
+use crate::SWORD_SLASH_TIME;
 
 use super::{
     systems::{
-        create_items::dev_init_items_system,
         equip_item::{
             display_equiped_item, equip_item_system, pickup_item_system, unequip_item_system,
         },
@@ -72,17 +71,17 @@ impl ItemType {
 pub struct ActivationTimer(pub Timer);
 
 #[derive(Component)]
-pub struct ItemEntity;
+pub struct Item;
 
 #[derive(Bundle, Component, Default)]
-pub struct Item {
+pub struct ItemBundle {
     pub item_type: ItemType,
     pub activation_timer: ActivationTimer,
     // #[bundle]
     // pub pbr_bundle: MaterialMeshBundle<StandardMaterial>,
 }
 
-impl Item {
+impl ItemBundle {
     fn activate(&mut self) -> () {
         self.activation_timer.0.reset();
     }
@@ -92,7 +91,7 @@ trait UpdateItem {
     fn update(&self, time: Res<Time>) -> ();
 }
 
-impl UpdateItem for Item {
+impl UpdateItem for ItemBundle {
     fn update(&self, time: Res<Time>) -> () {
         match self.item_type {
             ItemType::Sword => slash_sword(&self, time),

@@ -1,7 +1,7 @@
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_text_mesh::{TextMesh, TextMeshBundle, TextMeshFont};
 
-use crate::plugins::creature::creature_plugin::{CreatureConstructor, CreatureEntity};
+use crate::plugins::creature::creature_plugin::{Creature, CreatureConstructor};
 
 use super::stats::Stats;
 
@@ -42,7 +42,7 @@ impl SpawnHpsTextMeshChild for CreatureConstructor {
 
 pub trait UpdateHpsTextMesh {
     fn update_hps(
-        creature_q: Query<&Stats, With<CreatureEntity>>,
+        creature_q: Query<&Stats, With<Creature>>,
         text_mesh_q: Query<(&Parent, &mut TextMesh), With<HpsDisplay>>,
     ) -> ();
 }
@@ -52,7 +52,7 @@ pub trait UpdateHpsTextMesh {
 // Display HPs
 impl UpdateHpsTextMesh for HpsDisplay {
     fn update_hps(
-        creature_q: Query<&Stats, With<CreatureEntity>>,
+        creature_q: Query<&Stats, With<Creature>>,
         mut text_mesh_q: Query<(&Parent, &mut TextMesh), With<HpsDisplay>>,
     ) {
         for (parent, mut text_mesh) in text_mesh_q.iter_mut() {
@@ -64,7 +64,7 @@ impl UpdateHpsTextMesh for HpsDisplay {
     }
 }
 pub fn display_hps_system(
-    creature_q: Query<&Stats, With<CreatureEntity>>,
+    creature_q: Query<&Stats, With<Creature>>,
     text_mesh_q: Query<(&Parent, &mut TextMesh), With<HpsDisplay>>,
 ) {
     HpsDisplay::update_hps(creature_q, text_mesh_q);

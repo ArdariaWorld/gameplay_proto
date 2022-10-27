@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{plugins::creature::creature_plugin::CreatureEntity, MONSTER_STUN_COOLDOWN};
+use crate::{plugins::creature::creature_plugin::Creature, MONSTER_STUN_COOLDOWN};
 
 #[derive(Clone, Component, Default)]
 pub struct CreatureName(pub String);
@@ -45,7 +45,7 @@ pub struct ConsciousnessState(pub ConsciousnessStateEnum);
 
 pub fn change_consciousness_system(
     time: Res<Time>,
-    mut creatures_q: Query<&mut BrainState, With<CreatureEntity>>,
+    mut creatures_q: Query<&mut BrainState, With<Creature>>,
 ) {
     for mut creature_brain_state in creatures_q.iter_mut() {
         if creature_brain_state.stun_at.tick(time.delta()).finished() {

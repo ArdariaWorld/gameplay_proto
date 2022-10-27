@@ -1,8 +1,7 @@
 use crate::plugins::{
-    creature::creature_plugin::{Creature, CreatureEntity},
+    creature::creature_plugin::Creature,
     items::items_plugin::{
-        ActivationTimer, EquipItemEvent, EquippedItem, Inventory, Item, ItemEntity, ItemType,
-        PickUpItemEvent,
+        ActivationTimer, EquipItemEvent, EquippedItem, Inventory, Item, ItemType, PickUpItemEvent,
     },
 };
 use bevy::prelude::*;
@@ -16,8 +15,8 @@ use bevy::prelude::*;
 ///
 pub fn equip_item_system(
     mut commands: Commands,
-    creature_q: Query<(Entity, &Inventory), With<CreatureEntity>>,
-    item_q: Query<&ItemType, With<ItemEntity>>,
+    creature_q: Query<(Entity, &Inventory), With<Creature>>,
+    item_q: Query<&ItemType, With<Item>>,
     mut ev_equip_item: EventReader<EquipItemEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -79,7 +78,7 @@ pub fn display_equiped_item(
  * Receive a PickUpItem event and place item into entity inventory
  */
 pub fn pickup_item_system(
-    mut inventory_q: Query<&mut Inventory, With<CreatureEntity>>,
+    mut inventory_q: Query<&mut Inventory, With<Creature>>,
     mut ev_pickup_item: EventReader<PickUpItemEvent>,
 ) {
     for ev in ev_pickup_item.iter() {
