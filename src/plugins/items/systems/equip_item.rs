@@ -16,7 +16,7 @@ use bevy::prelude::*;
 pub fn equip_item_system(
     mut commands: Commands,
     creature_q: Query<(Entity, &Inventory), With<Creature>>,
-    item_q: Query<&ItemType, With<Item>>,
+    item_q: Query<&Item>,
     mut ev_equip_item: EventReader<EquipItemEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -27,16 +27,19 @@ pub fn equip_item_system(
         println!("inventory found");
 
         let item_entity = inventory.0.first().take().unwrap();
-        let item_type = item_q
+        let item = item_q
             .get(item_entity.clone())
             .expect("Cant find given item entity");
 
+        // Add holder entity reference in EquippedItem ?
         // commands.entity(*item_entity).insert(EquippedItem);
+
+        // Add EquippedItem component to inventory with Item entity reference
 
         commands.entity(entity).add_children(|parent| {
             parent.spawn_bundle(PbrBundle {
-                mesh: meshes.add(item_type.mesh()),
-                material: materials.add(item_type.color().into()),
+                mesh: meshes.add(item.item_type.mesh()),
+                material: materials.add(item.item_type.color().into()),
                 transform: Transform::from_xyz(1., 0., 0.5),
                 ..default()
             });

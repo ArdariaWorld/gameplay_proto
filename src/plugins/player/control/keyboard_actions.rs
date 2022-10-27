@@ -2,7 +2,7 @@ use bevy::prelude::{default, Commands, Entity, EventWriter, Input, KeyCode, Quer
 
 use crate::plugins::{
     creature::creature_plugin::Player,
-    items::items_plugin::{EquipItemEvent, Inventory, Item, ItemBundle, ItemType, PickUpItemEvent},
+    items::items_plugin::{EquipItemEvent, Inventory, Item, ItemType, PickUpItemEvent},
 };
 
 pub fn equip_item_key(
@@ -28,18 +28,18 @@ pub fn dev_spawn_item_key(
 
         if inventory.0.len() == 0 {
             println!("Inventory empty -> creating item");
-            let mut item = commands.spawn_bundle(ItemBundle {
+            let mut item_entity = commands.spawn();
+            item_entity.insert(Item {
                 item_type: ItemType::Sword,
                 ..default()
             });
-            item.insert(Item);
 
             println!(
                 "Inventory empty -> sending event {:?} -- {:?}",
                 player,
-                item.id()
+                item_entity.id()
             );
-            ev_pickup_item.send(PickUpItemEvent(player, item.id()));
+            ev_pickup_item.send(PickUpItemEvent(player, item_entity.id()));
         }
     }
 }

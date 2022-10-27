@@ -31,7 +31,7 @@ impl Plugin for CreaturePlugin {
     }
 }
 
-#[derive(Bundle, Component, Default)]
+#[derive(Bundle, Default)]
 pub struct CreatureBundle {
     pub creature_type: CreatureType,
     pub stats: Stats,

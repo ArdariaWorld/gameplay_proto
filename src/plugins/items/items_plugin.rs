@@ -70,18 +70,18 @@ impl ItemType {
 #[derive(Default, Component)]
 pub struct ActivationTimer(pub Timer);
 
-#[derive(Component)]
-pub struct Item;
-
-#[derive(Bundle, Component, Default)]
-pub struct ItemBundle {
+#[derive(Component, Default)]
+pub struct Item {
     pub item_type: ItemType,
     pub activation_timer: ActivationTimer,
-    // #[bundle]
-    // pub pbr_bundle: MaterialMeshBundle<StandardMaterial>,
 }
 
-impl ItemBundle {
+impl Item {
+    fn primary(&mut self) -> () {
+        self.activation_timer.0.reset();
+        // insert Animate Component
+    }
+
     fn activate(&mut self) -> () {
         self.activation_timer.0.reset();
     }
@@ -91,7 +91,7 @@ trait UpdateItem {
     fn update(&self, time: Res<Time>) -> ();
 }
 
-impl UpdateItem for ItemBundle {
+impl UpdateItem for Item {
     fn update(&self, time: Res<Time>) -> () {
         match self.item_type {
             ItemType::Sword => slash_sword(&self, time),

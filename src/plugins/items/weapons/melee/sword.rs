@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    plugins::items::items_plugin::{ActivationTimer, ItemBundle, ItemType},
+    plugins::items::items_plugin::{ActivationTimer, Item, ItemType},
     SWORD_SLASH_TIME,
 };
 
@@ -14,7 +14,8 @@ pub fn create_sword(
     materials: &mut ResMut<Assets<StandardMaterial>>,
 ) {
     commands
-        .spawn_bundle(ItemBundle {
+        .spawn()
+        .insert(Item {
             item_type: ItemType::Sword,
             activation_timer: ActivationTimer(Timer::from_seconds(SWORD_SLASH_TIME, false)),
             // pbr_bundle: PbrBundle {
@@ -30,4 +31,4 @@ pub fn create_sword(
 /**
  * Receive an event with the
  */
-pub fn slash_sword(item_bundle: &ItemBundle, time: Res<Time>) {}
+pub fn slash_sword(item_bundle: &Item, time: Res<Time>) {}
