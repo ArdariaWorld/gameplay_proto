@@ -4,6 +4,7 @@ use bevy_rapier3d::prelude::*;
 use crate::{
     plugins::creature::creature_plugin::{CreatureConstructor, CreatureType},
     utils::vec::RandVec3,
+    MONSTER_GROUP, PLAYER_GROUP, PROJECTILE_GROUP, SWORD_SENSOR_GROUP,
 };
 
 #[derive(Default, Bundle)]
@@ -68,12 +69,12 @@ impl InsertPhysicalBody for CreatureConstructor {
 
         // Specific groups depending on creature type
         if self.is_player.0 {
-            parent.insert(CollisionGroups::new(Group::GROUP_1, Group::GROUP_2));
+            parent.insert(CollisionGroups::new(PLAYER_GROUP, MONSTER_GROUP));
         } else {
             parent.insert(ActiveEvents::COLLISION_EVENTS); // Enable events to detect projectile events
             parent.insert(CollisionGroups::new(
-                Group::GROUP_2,
-                Group::GROUP_1 | Group::GROUP_2 | Group::GROUP_3 | Group::GROUP_4,
+                MONSTER_GROUP,
+                PLAYER_GROUP | MONSTER_GROUP | SWORD_SENSOR_GROUP | PROJECTILE_GROUP,
             ));
         }
     }

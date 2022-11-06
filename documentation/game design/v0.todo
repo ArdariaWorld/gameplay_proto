@@ -110,6 +110,16 @@
 ✔ sword mesh animated @started(22-10-23 15:13) @done(22-10-27 21:59) @lasted(4d6h46m30s)
 
 # 0.18
+✔ create item and place it on map @started(22-11-06 19:29) @done(22-11-06 20:40) @lasted(1h11m38s)
+✔ pick up item on the floor @started(22-11-06 20:40) @done(22-11-06 21:55) @lasted(1h15m41s)
+  - update_item#pickup
+
+[] equip item with 1-9 keys
+  - keyboard_actions#equip_item_key(entity, slot)
+
+[]
+  - drop item
+
 [] inventory system
 [] equip item
 [] use item

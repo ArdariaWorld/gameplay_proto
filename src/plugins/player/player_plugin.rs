@@ -4,10 +4,8 @@ use crate::GameState;
 
 use super::{
     control::{
-        keyboard_actions::{dev_spawn_item_key, equip_item_key},
-        keyboard_movement::wasd_movement,
-        mouse_left::mouse_left_click_system,
-        mouse_move::mouse_move_system,
+        keyboard_actions::equip_item_key, keyboard_movement::wasd_movement,
+        mouse_left::mouse_left_click_system, mouse_move::mouse_move_system,
         mouse_right::mouse_right_click_system,
     },
     player_events::{KillPlayerEvent, RespawnPlayerEvent},
@@ -25,7 +23,6 @@ impl Plugin for PlayerPlugin {
             .add_system(mouse_right_click_system)
             .add_system(mouse_left_click_system)
             .add_system(mouse_move_system)
-            .add_system(dev_spawn_item_key)
             .add_system(equip_item_key);
         // .add_system(mouse_left_click_system)
         // .add_system(kill_player)

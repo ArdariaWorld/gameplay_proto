@@ -24,16 +24,16 @@ pub fn animate_items_system(
 ) {
     for (entity, mut transform, mut timer) in animating_items_q.iter_mut() {
         timer.0.tick(time.delta());
+
         if timer.0.finished() {
             println!("Animation finished!");
             commands.entity(entity).remove::<AnimateVisualItem>();
             transform.rotation = Quat::default();
             timer.0.reset();
         } else {
-            println!("animate_items_system {:?}", timer.0.percent());
             transform.rotation = transform
                 .rotation
-                .lerp(Quat::from_rotation_x(2.), timer.0.percent());
+                .slerp(Quat::from_rotation_x(2.), timer.0.percent());
         }
     }
 }

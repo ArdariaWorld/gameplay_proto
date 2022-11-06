@@ -2,6 +2,8 @@ use crate::SWORD_SLASH_TIME;
 
 use super::{
     systems::{
+        create_items::dev_init_items_system,
+        dropped_items::dropped_items_collision_system,
         equip_item::{
             display_equiped_item, equip_item_system, pickup_item_system, unequip_item_system,
         },
@@ -20,8 +22,16 @@ pub struct EquipItemEvent(pub Entity);
 /// ### Param2 - {Entity} - The item which is picked up by the entity
 pub struct PickUpItemEvent(pub Entity, pub Entity);
 
+/// Drop an item on the floor
+/// ### Param 1 - {Entity} - The Item entity to drop
+/// ### Param 2 - {Tranform} - The global transform to drop the item
+pub struct DropItemEvent(pub Entity, pub Transform);
+
 // Activate the equipped item of the Entity (Creature)
 pub struct ActivateItemEvent(pub Entity);
+
+#[derive(Component)]
+pub struct Pickable;
 
 pub struct ItemsPlugin;
 impl Plugin for ItemsPlugin {
@@ -29,11 +39,13 @@ impl Plugin for ItemsPlugin {
         app.add_event::<PickUpItemEvent>()
             .add_event::<EquipItemEvent>()
             .add_event::<ActivateItemEvent>()
+            .add_startup_system(dev_init_items_system)
             .add_system(pickup_item_system)
             .add_system(equip_item_system)
             .add_system(unequip_item_system)
             .add_system(start_items_animation_system)
             .add_system(display_equiped_item)
+            .add_system(dropped_items_collision_system)
             .add_system(animate_items_system);
     }
 }
@@ -49,6 +61,13 @@ pub enum ItemType {
 }
 
 impl ItemType {
+    pub fn dimensions(&self) -> Vec3 {
+        match self {
+            ItemType::Sword => Vec3::new(0.2, 1.3, 0.2),
+            ItemType::Shovel => Vec3::new(0.2, 1.3, 0.2),
+        }
+    }
+
     pub fn mesh(&self) -> Mesh {
         match self {
             ItemType::Sword => Mesh::from(shape::Box::new(0.2, 1.3, 0.2)),
@@ -97,6 +116,20 @@ pub struct VisualItem {
     pub animation_timer: AnimationTimer,
 }
 
+#[derive(Bundle, Default)]
+pub struct DroppedItem {
+    #[bundle]
+    pub mesh: MaterialMeshBundle<StandardMaterial>,
+    // pub collider: Collider,
+    // pub sensor: Sensor,
+    // .insert(Collider::cone(2., 3.))
+    // .insert(Sensor)
+    // .insert(PlayerSwordRangeSensor)
+    // .insert(CollisionGroups::new(Group::GROUP_3, Group::GROUP_2));
+
+    // Collider
+}
+
 #[derive(Component, Default)]
 pub struct AnimateVisualItem;
 
@@ -137,9 +170,6 @@ impl EquipItem for Item {
 
 #[derive(Component, Default)]
 pub struct EquippedItem(pub Option<Entity>);
-
-#[derive(Component)]
-pub struct DroppedItem(pub Entity);
 
 #[derive(Bundle, Component)]
 pub struct InventoryBundle {

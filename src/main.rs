@@ -7,7 +7,7 @@ use bevy_mod_raycast::{
     DefaultPluginState, DefaultRaycastingPlugin, RayCastMesh, RayCastSource, RaycastSystem,
 };
 use bevy_rapier3d::{
-    prelude::{Collider, NoUserData, RapierPhysicsPlugin},
+    prelude::{Collider, Group, NoUserData, RapierPhysicsPlugin},
     render::RapierDebugRenderPlugin,
 };
 use bevy_text_mesh::TextMeshPlugin;
@@ -50,6 +50,16 @@ pub const WALL_COLOR: Color = Color::BLUE;
 
 pub const PIXEL_PER_METER: f32 = 50.;
 pub const PIXEL_SCALE: f32 = 1. / 50.;
+
+// pub enum ColiGroups {
+// Player = Group::GROUP_1,
+// }
+
+pub const PLAYER_GROUP: Group = Group::GROUP_1;
+pub const MONSTER_GROUP: Group = Group::GROUP_2;
+pub const SWORD_SENSOR_GROUP: Group = Group::GROUP_3;
+pub const PROJECTILE_GROUP: Group = Group::GROUP_4;
+pub const PICKABLE_GROUP: Group = Group::GROUP_5;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {

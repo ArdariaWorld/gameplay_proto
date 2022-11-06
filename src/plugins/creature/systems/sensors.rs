@@ -3,7 +3,9 @@ use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
 use std::f32::consts::PI;
 
-use crate::plugins::creature::creature_plugin::CreatureConstructor;
+use crate::{
+    plugins::creature::creature_plugin::CreatureConstructor, MONSTER_GROUP, SWORD_SENSOR_GROUP,
+};
 
 #[derive(Component, Inspectable)]
 pub struct PlayerSwordRangeSensor;
@@ -28,7 +30,7 @@ impl SpawnSwordRangeColliderChild for CreatureConstructor {
                     .insert(Collider::cone(2., 3.))
                     .insert(Sensor)
                     .insert(PlayerSwordRangeSensor)
-                    .insert(CollisionGroups::new(Group::GROUP_3, Group::GROUP_2));
+                    .insert(CollisionGroups::new(SWORD_SENSOR_GROUP, MONSTER_GROUP));
             }
         })
     }

@@ -105,6 +105,16 @@ pub fn pickup_item_system(
 
         println!("Inventory found {:?}", inventory.0.len());
 
-        inventory.0.push(ev.1)
+        // Remove DroppedItem children bundle
+
+        // inventory.0.push(ev.1)
     }
+}
+
+pub fn drop_item_system() {
+    // read drop item events
+    // get item from entity param
+    // add mesh
+    // add sensor
+    // add collider
 }

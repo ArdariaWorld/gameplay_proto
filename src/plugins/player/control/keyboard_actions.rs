@@ -1,8 +1,11 @@
-use bevy::prelude::{default, Commands, Entity, EventWriter, Input, KeyCode, Query, Res, With};
+use std::f32::consts::PI;
+
+use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
 
 use crate::plugins::{
     creature::creature_plugin::Player,
-    items::items_plugin::{EquipItemEvent, Inventory, Item, ItemType, PickUpItemEvent},
+    items::items_plugin::{EquipItemEvent, Inventory, Item, ItemType, PickUpItemEvent, Pickable},
 };
 
 pub fn equip_item_key(
@@ -14,32 +17,5 @@ pub fn equip_item_key(
         let player = player_q.get_single().expect("No Player found");
 
         ev_equip_item.send(EquipItemEvent(player));
-    }
-}
-
-pub fn dev_spawn_item_key(
-    mut commands: Commands,
-    keyboard_input: Res<Input<KeyCode>>,
-    player_q: Query<(Entity, &Inventory), With<Player>>,
-    mut ev_pickup_item: EventWriter<PickUpItemEvent>,
-) {
-    if keyboard_input.pressed(KeyCode::X) {
-        let (player, inventory) = player_q.get_single().expect("No Player found");
-
-        if inventory.0.len() == 0 {
-            println!("Inventory empty -> creating item");
-            let mut item_entity = commands.spawn();
-            item_entity.insert(Item {
-                item_type: ItemType::Sword,
-                ..default()
-            });
-
-            println!(
-                "Inventory empty -> sending event {:?} -- {:?}",
-                player,
-                item_entity.id()
-            );
-            ev_pickup_item.send(PickUpItemEvent(player, item_entity.id()));
-        }
     }
 }
